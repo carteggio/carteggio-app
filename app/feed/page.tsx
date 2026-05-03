@@ -26,8 +26,7 @@ export default async function FeedPage() {
 
   const supabase = createClient();
 
-  // RLS già filtra i pezzi alla città dell'utente.
-  // Escludiamo i propri pezzi a livello di query.
+  // RLS già filtra per città. Escludiamo i propri pezzi.
   const { data: pezzi, error } = await supabase
     .from("pezzi")
     .select(
@@ -46,6 +45,16 @@ export default async function FeedPage() {
     .neq("autore_id", user.id)
     .order("created_at", { ascending: false })
     .limit(10);
+
+  // Carico gli ID dei pezzi a cui l'utente ha già lasciato un eco
+  const { data: echiInviati } = await supabase
+    .from("echi")
+    .select("pezzo_id")
+    .eq("mittente_id", user.id);
+
+  const pezziGiaEcoati = new Set(
+    (echiInviati ?? []).map((e) => e.pezzo_id)
+  );
 
   const items = (pezzi ?? []) as unknown as FeedItem[];
 
@@ -99,50 +108,56 @@ export default async function FeedPage() {
 
           {items.length > 0 && (
             <div className="space-y-12">
-              {items.map((p) => (
-                <article
-                  key={p.id}
-                  className="border-b border-rule pb-12 last:border-b-0"
-                >
-                  <p className="font-sans text-xs tracking-widest uppercase text-ink-faded mb-4">
-                    {FORMATO_LABEL[p.formato as FormatoPezzo]}
-                  </p>
-                  <div
-                    className={`font-serif whitespace-pre-line leading-relaxed ${
-                      p.formato === "sei-parole"
-                        ? "text-2xl text-center"
-                        : p.formato === "ricordo" || p.formato === "luogo"
-                          ? "italic text-xl"
-                          : "text-xl"
-                    }`}
+              {items.map((p) => {
+                const giaEcoato = pezziGiaEcoati.has(p.id);
+                return (
+                  <article
+                    key={p.id}
+                    className="border-b border-rule pb-12 last:border-b-0"
                   >
-                    {p.contenuto_testo}
-                  </div>
-                  <div className="mt-6 flex items-baseline justify-between">
-                    <p className="font-serif italic text-sm text-ink-soft">
-                      — {p.autore?.nome_battesimo ?? "anonimo"}
-                      {p.autore?.fascia_eta && (
-                        <span className="text-ink-faded">
-                          , {p.autore.fascia_eta}
-                        </span>
-                      )}
+                    <p className="font-sans text-xs tracking-widest uppercase text-ink-faded mb-4">
+                      {FORMATO_LABEL[p.formato as FormatoPezzo]}
                     </p>
-                    <p className="font-serif italic text-xs text-ink-faded">
-                      {formatRelativeDate(p.created_at)}
-                    </p>
-                  </div>
+                    <div
+                      className={`font-serif whitespace-pre-line leading-relaxed ${
+                        p.formato === "sei-parole"
+                          ? "text-2xl text-center"
+                          : p.formato === "ricordo" || p.formato === "luogo"
+                            ? "italic text-xl"
+                            : "text-xl"
+                      }`}
+                    >
+                      {p.contenuto_testo}
+                    </div>
+                    <div className="mt-6 flex items-baseline justify-between">
+                      <p className="font-serif italic text-sm text-ink-soft">
+                        — {p.autore?.nome_battesimo ?? "anonimo"}
+                        {p.autore?.fascia_eta && (
+                          <span className="text-ink-faded">
+                            , {p.autore.fascia_eta}
+                          </span>
+                        )}
+                      </p>
+                      <p className="font-serif italic text-xs text-ink-faded">
+                        {formatRelativeDate(p.created_at)}
+                      </p>
+                    </div>
 
-                  {/* Placeholder per /eco — Pomeriggio 6 */}
-                  <button
-                    type="button"
-                    disabled
-                    className="mt-4 font-sans text-xs tracking-widest uppercase text-ink-faded border border-rule rounded-full px-5 py-2 opacity-60 cursor-not-allowed"
-                    title="Disponibile dal Pomeriggio 6"
-                  >
-                    lascia un eco · presto
-                  </button>
-                </article>
-              ))}
+                    {giaEcoato ? (
+                      <p className="mt-4 font-serif italic text-sm text-ink-faded">
+                        Hai già lasciato un eco a questo pezzo.
+                      </p>
+                    ) : (
+                      <Link
+                        href={`/eco/${p.id}`}
+                        className="mt-4 inline-block font-sans text-xs tracking-widest uppercase text-accent border border-accent rounded-full px-5 py-2 hover:bg-accent hover:text-paper transition-colors"
+                      >
+                        lascia un eco
+                      </Link>
+                    )}
+                  </article>
+                );
+              })}
 
               <div className="text-center pt-4">
                 <p className="font-serif italic text-sm text-ink-faded">

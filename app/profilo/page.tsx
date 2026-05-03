@@ -8,6 +8,12 @@ import Nav from "@/app/components/nav";
 
 export const dynamic = "force-dynamic";
 
+function pezziLabel(n: number): string {
+  if (n === 0) return "ancora nessun pezzo";
+  if (n === 1) return "1 pezzo pubblicato";
+  return `${n} pezzi pubblicati`;
+}
+
 export default async function ProfiloPage() {
   const { user, profile } = await getCurrentProfile();
   if (!user) redirect("/login");
@@ -40,8 +46,7 @@ export default async function ProfiloPage() {
               {profile.fascia_eta} anni
             </p>
             <p className="font-sans text-xs tracking-widest uppercase text-ink-faded mt-6">
-              {numeroPezzi} {numeroPezzi === 1 ? "pezzo" : "pezzi"} pubblicato
-              {numeroPezzi === 1 ? "" : "i"}
+              {pezziLabel(numeroPezzi)}
             </p>
           </header>
 

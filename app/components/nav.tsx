@@ -1,11 +1,12 @@
 import Link from "next/link";
 
-type NavSection = "feed" | "scrivi" | "profilo";
+type NavSection = "feed" | "scrivi" | "echi" | "profilo";
 
 export default function Nav({ active }: { active?: NavSection }) {
   const items: { id: NavSection; label: string; href: string }[] = [
     { id: "feed", label: "feed", href: "/feed" },
     { id: "scrivi", label: "scrivi", href: "/scrivi" },
+    { id: "echi", label: "echi", href: "/echi" },
     { id: "profilo", label: "profilo", href: "/profilo" },
   ];
 
@@ -18,7 +19,7 @@ export default function Nav({ active }: { active?: NavSection }) {
         >
           Cartegg<span className="text-accent italic">i</span>o
         </Link>
-        <nav className="flex gap-5">
+        <nav className="flex gap-4 sm:gap-5">
           {items.map((item) => (
             <Link
               key={item.id}
