@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16 relative">
+    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
       <div className="max-w-xl w-full text-center">
         <p className="font-sans text-xs tracking-[0.3em] uppercase text-ink-faded mb-6">
           in arrivo · brescia · bergamo
@@ -19,15 +19,16 @@ export default function Home() {
           <br />
           Quando sarà il momento, ti scriveremo.
         </p>
-      </div>
 
-      {/* Link discreto a /login per le early adopter */}
-      <Link
-        href="/login"
-        className="absolute bottom-8 right-8 font-sans text-xs tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
-      >
-        entra
-      </Link>
+        <div className="mt-12">
+          <Link
+            href="/login"
+            className="inline-block font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
+          >
+            entra
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }
