@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import Nav from "@/app/components/nav";
 
 export default async function BenvenutoPage() {
   const { user, profile } = await getCurrentProfile();
@@ -14,44 +15,37 @@ export default async function BenvenutoPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
-      <div className="max-w-md w-full text-center">
-        <p className="font-sans text-xs tracking-[0.3em] uppercase text-ink-faded mb-6">
-          {profile.citta.toLowerCase()}
-        </p>
-        <h1 className="font-serif text-5xl md:text-6xl font-medium leading-none">
-          Eccoti qui, <span className="italic">{profile.nome_battesimo}</span>.
-        </h1>
-        <p className="font-serif italic text-xl text-ink-soft mt-6">
-          Sei dentro Carteggio.
-        </p>
+    <div className="min-h-screen flex flex-col">
+      <Nav />
 
-        <div className="w-16 h-px bg-rule mx-auto my-12" />
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+        <div className="max-w-md w-full text-center">
+          <p className="font-sans text-xs tracking-[0.3em] uppercase text-ink-faded mb-6">
+            {profile.citta.toLowerCase()}
+          </p>
+          <h1 className="font-serif text-5xl md:text-6xl font-medium leading-none">
+            Eccoti qui, <span className="italic">{profile.nome_battesimo}</span>.
+          </h1>
+          <p className="font-serif italic text-xl text-ink-soft mt-6">
+            Sei dentro Carteggio.
+          </p>
 
-        <div className="flex flex-col gap-3">
+          <div className="w-16 h-px bg-rule mx-auto my-12" />
+
           <Link
-            href="/profilo"
+            href="/feed"
             className="inline-block font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
           >
-            il tuo profilo
+            vai al feed
           </Link>
-          <Link
-            href="/scrivi"
-            className="inline-block font-sans text-sm tracking-[0.25em] uppercase text-ink-faded border border-rule rounded-full px-8 py-3 hover:border-accent hover:text-accent transition-colors"
-          >
-            scrivi un pezzo
-          </Link>
-        </div>
 
-        <form action="/auth/logout" method="POST" className="mt-12">
-          <button
-            type="submit"
-            className="font-sans text-xs tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
-          >
-            esci
-          </button>
-        </form>
-      </div>
-    </main>
+          <p className="font-serif italic text-sm text-ink-faded mt-8 leading-relaxed">
+            Lì leggi i pezzi delle persone della tua città.
+            <br />
+            Da menu in alto puoi scrivere o tornare al tuo profilo.
+          </p>
+        </div>
+      </main>
+    </div>
   );
 }

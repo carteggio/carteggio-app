@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import ScriviForm from "./scrivi-form";
+import Nav from "@/app/components/nav";
 
 export const dynamic = "force-dynamic";
 
@@ -22,26 +23,34 @@ export default async function ScriviPage() {
 
   if (numeroPezzi >= 5) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
-        <div className="max-w-md w-full text-center">
-          <h1 className="font-serif text-3xl font-medium leading-tight">
-            Hai già cinque pezzi.
-          </h1>
-          <p className="font-serif italic text-lg text-ink-soft mt-4 leading-relaxed">
-            Per scriverne uno nuovo, prima eliminane uno dal tuo profilo.
-            <br />
-            Cinque è il numero giusto: oltre, ti diluisci.
-          </p>
-          <Link
-            href="/profilo"
-            className="inline-block mt-12 font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
-          >
-            torna al profilo
-          </Link>
-        </div>
-      </main>
+      <div className="min-h-screen flex flex-col">
+        <Nav active="scrivi" />
+        <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+          <div className="max-w-md w-full text-center">
+            <h1 className="font-serif text-3xl font-medium leading-tight">
+              Hai già cinque pezzi.
+            </h1>
+            <p className="font-serif italic text-lg text-ink-soft mt-4 leading-relaxed">
+              Per scriverne uno nuovo, prima eliminane uno dal tuo profilo.
+              <br />
+              Cinque è il numero giusto: oltre, ti diluisci.
+            </p>
+            <Link
+              href="/profilo"
+              className="inline-block mt-12 font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
+            >
+              torna al profilo
+            </Link>
+          </div>
+        </main>
+      </div>
     );
   }
 
-  return <ScriviForm pezziAttuali={numeroPezzi} />;
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Nav active="scrivi" />
+      <ScriviForm pezziAttuali={numeroPezzi} />
+    </div>
+  );
 }
