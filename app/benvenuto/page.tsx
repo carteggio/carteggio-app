@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getCurrentProfile } from "@/lib/auth/profile";
 
 export default async function BenvenutoPage() {
@@ -19,7 +20,7 @@ export default async function BenvenutoPage() {
           {profile.citta.toLowerCase()}
         </p>
         <h1 className="font-serif text-5xl md:text-6xl font-medium leading-none">
-          Benvenuta, <span className="italic">{profile.nome_battesimo}</span>.
+          Eccoti qui, <span className="italic">{profile.nome_battesimo}</span>.
         </h1>
         <p className="font-serif italic text-xl text-ink-soft mt-6">
           Sei dentro Carteggio.
@@ -27,13 +28,20 @@ export default async function BenvenutoPage() {
 
         <div className="w-16 h-px bg-rule mx-auto my-12" />
 
-        <p className="font-serif italic text-base text-ink-faded leading-relaxed">
-          Il feed, l'eco, i pezzi degli altri arriveranno
-          <br />
-          nel prossimo pomeriggio di sviluppo.
-          <br />
-          Per oggi: il tuo profilo c'è, il tuo primo pezzo è pubblicato.
-        </p>
+        <div className="flex flex-col gap-3">
+          <Link
+            href="/profilo"
+            className="inline-block font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
+          >
+            il tuo profilo
+          </Link>
+          <Link
+            href="/scrivi"
+            className="inline-block font-sans text-sm tracking-[0.25em] uppercase text-ink-faded border border-rule rounded-full px-8 py-3 hover:border-accent hover:text-accent transition-colors"
+          >
+            scrivi un pezzo
+          </Link>
+        </div>
 
         <form action="/auth/logout" method="POST" className="mt-12">
           <button
