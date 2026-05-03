@@ -5,20 +5,13 @@ import Nav from "@/app/components/nav";
 
 export default async function BenvenutoPage() {
   const { user, profile } = await getCurrentProfile();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  if (!profile) {
-    redirect("/onboarding/eta");
-  }
+  if (!user) redirect("/login");
+  if (!profile) redirect("/onboarding/eta");
 
   return (
     <div className="min-h-screen flex flex-col">
       <Nav />
-
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 pb-32">
         <div className="max-w-md w-full text-center">
           <p className="font-sans text-xs tracking-[0.3em] uppercase text-ink-faded mb-6">
             {profile.citta.toLowerCase()}
@@ -40,9 +33,9 @@ export default async function BenvenutoPage() {
           </Link>
 
           <p className="font-serif italic text-sm text-ink-faded mt-8 leading-relaxed">
-            Lì leggi i pezzi delle persone della tua città.
+            Le icone in basso ti portano dove serve:
             <br />
-            Da menu in alto puoi scrivere o tornare al tuo profilo.
+            feed, scrivi, carteggi, tu.
           </p>
         </div>
       </main>

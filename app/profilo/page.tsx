@@ -32,8 +32,7 @@ export default async function ProfiloPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Nav active="profilo" />
-
-      <main className="flex-1 px-6 py-12">
+      <main className="flex-1 px-6 py-12 pb-32">
         <div className="max-w-xl mx-auto">
           <header className="text-center mb-16">
             <p className="font-sans text-xs tracking-[0.3em] uppercase text-ink-faded mb-4">
@@ -94,8 +93,6 @@ export default async function ProfiloPage() {
             ) : (
               <p className="font-serif italic text-sm text-ink-faded">
                 Hai raggiunto il limite di 5 pezzi.
-                <br />
-                Per scriverne uno nuovo, eliminane uno (a presto).
               </p>
             )}
           </div>

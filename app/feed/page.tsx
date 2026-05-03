@@ -25,20 +25,12 @@ export default async function FeedPage() {
   if (!profile) redirect("/onboarding/eta");
 
   const supabase = createClient();
-
-  // RLS già filtra per città. Escludiamo i propri pezzi.
   const { data: pezzi, error } = await supabase
     .from("pezzi")
     .select(
       `
-      id,
-      formato,
-      contenuto_testo,
-      created_at,
-      autore:users!autore_id (
-        nome_battesimo,
-        fascia_eta
-      )
+      id, formato, contenuto_testo, created_at,
+      autore:users!autore_id ( nome_battesimo, fascia_eta )
     `
     )
     .eq("stato", "visibile")
@@ -46,23 +38,18 @@ export default async function FeedPage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  // Carico gli ID dei pezzi a cui l'utente ha già lasciato un eco
   const { data: echiInviati } = await supabase
     .from("echi")
     .select("pezzo_id")
     .eq("mittente_id", user.id);
 
-  const pezziGiaEcoati = new Set(
-    (echiInviati ?? []).map((e) => e.pezzo_id)
-  );
-
+  const pezziGiaEcoati = new Set((echiInviati ?? []).map((e) => e.pezzo_id));
   const items = (pezzi ?? []) as unknown as FeedItem[];
 
   return (
     <div className="min-h-screen flex flex-col">
       <Nav active="feed" />
-
-      <main className="flex-1 px-6 py-12">
+      <main className="flex-1 px-6 py-12 pb-32">
         <div className="max-w-xl mx-auto">
           <header className="text-center mb-12">
             <p className="font-sans text-xs tracking-[0.3em] uppercase text-ink-faded mb-3">

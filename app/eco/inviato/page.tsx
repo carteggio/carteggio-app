@@ -11,7 +11,7 @@ export default async function EcoInviatoPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Nav active="feed" />
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 pb-32">
         <div className="max-w-md w-full text-center">
           <p className="font-sans text-xs tracking-[0.3em] uppercase text-ink-faded mb-6">
             eco partito

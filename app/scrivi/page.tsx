@@ -25,7 +25,7 @@ export default async function ScriviPage() {
     return (
       <div className="min-h-screen flex flex-col">
         <Nav active="scrivi" />
-        <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+        <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 pb-32">
           <div className="max-w-md w-full text-center">
             <h1 className="font-serif text-3xl font-medium leading-tight">
               Hai già cinque pezzi.
@@ -50,7 +50,9 @@ export default async function ScriviPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Nav active="scrivi" />
-      <ScriviForm pezziAttuali={numeroPezzi} />
+      <div className="pb-32">
+        <ScriviForm pezziAttuali={numeroPezzi} />
+      </div>
     </div>
   );
 }

@@ -21,15 +21,8 @@ export default async function EcoPage({ params }: { params: { pezzoId: string } 
     .from("pezzi")
     .select(
       `
-      id,
-      formato,
-      contenuto_testo,
-      created_at,
-      autore_id,
-      autore:users!autore_id (
-        nome_battesimo,
-        fascia_eta
-      )
+      id, formato, contenuto_testo, created_at, autore_id,
+      autore:users!autore_id ( nome_battesimo, fascia_eta )
     `
     )
     .eq("id", params.pezzoId)
@@ -38,27 +31,32 @@ export default async function EcoPage({ params }: { params: { pezzoId: string } 
 
   if (!pezzo) notFound();
 
+  const blockBox = (titolo: string, sottotitolo: string) => (
+    <div className="min-h-screen flex flex-col">
+      <Nav active="feed" />
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 pb-32">
+        <div className="max-w-md w-full text-center">
+          <h1 className="font-serif text-3xl font-medium leading-tight">
+            {titolo}
+          </h1>
+          <p className="font-serif italic text-lg text-ink-soft mt-4 leading-relaxed">
+            {sottotitolo}
+          </p>
+          <Link
+            href="/feed"
+            className="inline-block mt-12 font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
+          >
+            torna al feed
+          </Link>
+        </div>
+      </main>
+    </div>
+  );
+
   if (pezzo.autore_id === user.id) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Nav active="feed" />
-        <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
-          <div className="max-w-md w-full text-center">
-            <h1 className="font-serif text-3xl font-medium leading-tight">
-              Questo pezzo è tuo.
-            </h1>
-            <p className="font-serif italic text-lg text-ink-soft mt-4">
-              Non si lascia un eco ai propri pezzi.
-            </p>
-            <Link
-              href="/feed"
-              className="inline-block mt-12 font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
-            >
-              torna al feed
-            </Link>
-          </div>
-        </main>
-      </div>
+    return blockBox(
+      "Questo pezzo è tuo.",
+      "Non si lascia un eco ai propri pezzi."
     );
   }
 
@@ -70,66 +68,29 @@ export default async function EcoPage({ params }: { params: { pezzoId: string } 
     .maybeSingle();
 
   if (ecoEsistente) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Nav active="feed" />
-        <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
-          <div className="max-w-md w-full text-center">
-            <h1 className="font-serif text-3xl font-medium leading-tight">
-              Hai già lasciato un eco a questo pezzo.
-            </h1>
-            <p className="font-serif italic text-lg text-ink-soft mt-4">
-              Una volta è abbastanza. Aspetta che venga letto.
-            </p>
-            <Link
-              href="/feed"
-              className="inline-block mt-12 font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
-            >
-              torna al feed
-            </Link>
-          </div>
-        </main>
-      </div>
+    return blockBox(
+      "Hai già lasciato un eco a questo pezzo.",
+      "Una volta è abbastanza. Aspetta che venga letto."
     );
   }
 
   const echiOggi = await contaEchiOggi(user.id);
   if (echiOggi >= ECO_LIMITE_GIORNALIERO) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Nav active="feed" />
-        <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
-          <div className="max-w-md w-full text-center">
-            <h1 className="font-serif text-3xl font-medium leading-tight">
-              Hai già lasciato {ECO_LIMITE_GIORNALIERO} echi oggi.
-            </h1>
-            <p className="font-serif italic text-lg text-ink-soft mt-4 leading-relaxed">
-              Tre al giorno è il limite. Serve a scegliere su chi spendere
-              attenzione.
-              <br />
-              Torna domani.
-            </p>
-            <Link
-              href="/feed"
-              className="inline-block mt-12 font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
-            >
-              torna al feed
-            </Link>
-          </div>
-        </main>
-      </div>
+    return blockBox(
+      `Hai già lasciato ${ECO_LIMITE_GIORNALIERO} echi oggi.`,
+      "Tre al giorno è il limite. Serve a scegliere su chi spendere attenzione. Torna domani."
     );
   }
 
-  const autore = (pezzo.autore as unknown as {
+  const autore = pezzo.autore as unknown as {
     nome_battesimo: string;
     fascia_eta: string;
-  } | null);
+  } | null;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Nav active="feed" />
-      <main className="flex-1 px-6 py-12">
+      <main className="flex-1 px-6 py-12 pb-32">
         <div className="max-w-md mx-auto">
           <Link
             href="/feed"
@@ -169,9 +130,7 @@ export default async function EcoPage({ params }: { params: { pezzoId: string } 
             </div>
             <p className="font-serif italic text-sm text-ink-faded mt-4">
               — {autore?.nome_battesimo ?? "anonimo"}
-              {autore?.fascia_eta && (
-                <span>, {autore.fascia_eta}</span>
-              )}
+              {autore?.fascia_eta && <span>, {autore.fascia_eta}</span>}
             </p>
           </article>
 
