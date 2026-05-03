@@ -2,7 +2,8 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
-import { contaEchiOggi, ECO_LIMITE_GIORNALIERO } from "@/lib/eco";
+import { ECO_LIMITE_GIORNALIERO } from "@/lib/eco";
+import { contaEchiOggi } from "@/lib/eco-server";
 import { FORMATO_LABEL, type FormatoPezzo } from "@/lib/formati";
 import Nav from "@/app/components/nav";
 import EcoForm from "./eco-form";
@@ -16,7 +17,6 @@ export default async function EcoPage({ params }: { params: { pezzoId: string } 
 
   const supabase = createClient();
 
-  // Carico il pezzo a cui sto rispondendo (solo se RLS lo permette: stessa città)
   const { data: pezzo } = await supabase
     .from("pezzi")
     .select(
@@ -38,7 +38,6 @@ export default async function EcoPage({ params }: { params: { pezzoId: string } 
 
   if (!pezzo) notFound();
 
-  // Non puoi lasciare un eco a te stessa
   if (pezzo.autore_id === user.id) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -63,7 +62,6 @@ export default async function EcoPage({ params }: { params: { pezzoId: string } 
     );
   }
 
-  // Verifico se ho già lasciato un eco a questo pezzo
   const { data: ecoEsistente } = await supabase
     .from("echi")
     .select("id")
@@ -95,7 +93,6 @@ export default async function EcoPage({ params }: { params: { pezzoId: string } 
     );
   }
 
-  // Verifico il limite quotidiano
   const echiOggi = await contaEchiOggi(user.id);
   if (echiOggi >= ECO_LIMITE_GIORNALIERO) {
     return (
@@ -124,7 +121,6 @@ export default async function EcoPage({ params }: { params: { pezzoId: string } 
     );
   }
 
-  // Tipizzazione del nested join
   const autore = (pezzo.autore as unknown as {
     nome_battesimo: string;
     fascia_eta: string;
@@ -156,7 +152,6 @@ export default async function EcoPage({ params }: { params: { pezzoId: string } 
             </p>
           </header>
 
-          {/* Pezzo a cui rispondo (read-only) */}
           <article className="border border-rule rounded-lg p-6 bg-paper-deep mb-8">
             <p className="font-sans text-xs tracking-widest uppercase text-ink-faded mb-3">
               {FORMATO_LABEL[pezzo.formato as FormatoPezzo]}

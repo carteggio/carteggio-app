@@ -3,11 +3,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
-  contaEchiOggi,
   ECO_LIMITE_GIORNALIERO,
   ECO_TESTO_MIN,
   ECO_TESTO_MAX,
 } from "@/lib/eco";
+import { contaEchiOggi } from "@/lib/eco-server";
 
 type State = { error: string | null };
 
@@ -43,7 +43,6 @@ export async function saveEco(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Verifica che il pezzo esista e non sia mio
   const { data: pezzo } = await supabase
     .from("pezzi")
     .select("id, autore_id, stato")
@@ -56,7 +55,6 @@ export async function saveEco(
     return { error: "Non puoi lasciare un eco a un tuo pezzo." };
   }
 
-  // Verifica eco doppio
   const { data: esistente } = await supabase
     .from("echi")
     .select("id")
@@ -68,7 +66,6 @@ export async function saveEco(
     return { error: "Hai già lasciato un eco a questo pezzo." };
   }
 
-  // Verifica limite quotidiano
   const oggi = await contaEchiOggi(user.id);
   if (oggi >= ECO_LIMITE_GIORNALIERO) {
     return {
