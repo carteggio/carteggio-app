@@ -44,7 +44,35 @@ export default async function ProfiloPage() {
             <p className="font-serif italic text-lg text-ink-soft mt-3">
               {profile.fascia_eta} anni
             </p>
-            <p className="font-sans text-xs tracking-widest uppercase text-ink-faded mt-6">
+
+            {/* Foto profilo: visibile solo a te */}
+            <div className="mt-8 flex flex-col items-center gap-3">
+              {profile.foto_url ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={profile.foto_url}
+                    alt="La tua foto"
+                    className="w-32 h-32 object-cover rounded-full border border-rule"
+                  />
+                  <Link
+                    href="/profilo/foto"
+                    className="font-sans text-xs tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
+                  >
+                    cambia o rimuovi foto
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href="/profilo/foto"
+                  className="font-sans text-xs tracking-widest uppercase text-ink-faded border border-rule rounded-full px-5 py-2 hover:border-accent hover:text-accent transition-colors"
+                >
+                  + carica una foto (facoltativa)
+                </Link>
+              )}
+            </div>
+
+            <p className="font-sans text-xs tracking-widest uppercase text-ink-faded mt-8">
               {pezziLabel(numeroPezzi)}
             </p>
           </header>

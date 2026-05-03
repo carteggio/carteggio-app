@@ -5,12 +5,14 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  // Se sei già autenticata, vai dritta al feed (o all'onboarding se manca)
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (user) {
+    // Verifica se ha un profilo (onboarding completato)
     const { data: profile } = await supabase
       .from("users")
       .select("id")
@@ -24,6 +26,7 @@ export default async function Home() {
     }
   }
 
+  // Landing pubblica: mostrato solo a chi non è autenticato
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
       <div className="max-w-xl w-full text-center">
@@ -42,6 +45,7 @@ export default async function Home() {
           <br />
           Quando sarà il momento, ti scriveremo.
         </p>
+
         <div className="mt-12">
           <Link
             href="/login"

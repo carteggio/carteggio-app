@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { canSendMessage } from "@/lib/carteggio-server";
+import { PHOTO_UNLOCK_AFTER_MESSAGES } from "@/lib/foto";
 
 type State = { error: string | null };
 
@@ -27,7 +28,6 @@ export async function sendMessaggio(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Verifica che l'utente sia partecipante
   const { data: carteggio } = await supabase
     .from("carteggi")
     .select("id, partecipante_a_id, partecipante_b_id, stato")
@@ -44,7 +44,6 @@ export async function sendMessaggio(
     return { error: "Non sei un partecipante di questo carteggio." };
   }
 
-  // Carica messaggi
   const { data: messaggi } = await supabase
     .from("messaggi")
     .select("id, mittente_id, created_at")
@@ -83,7 +82,6 @@ export async function sendMessaggio(
     return { error: insertError.message };
   }
 
-  // Update ultimo_messaggio_at
   await supabase
     .from("carteggi")
     .update({ ultimo_messaggio_at: new Date().toISOString() })
@@ -91,4 +89,48 @@ export async function sendMessaggio(
 
   revalidatePath(`/carteggi/${carteggioId}`);
   return { error: null };
+}
+
+export async function sbloccaFoto(formData: FormData) {
+  const carteggioId = formData.get("carteggioId");
+  if (typeof carteggioId !== "string") return;
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Carica il carteggio + conta messaggi per verifica soglia
+  const { data: carteggio } = await supabase
+    .from("carteggi")
+    .select(
+      "id, partecipante_a_id, partecipante_b_id, stato, foto_sbloccata_a, foto_sbloccata_b"
+    )
+    .eq("id", carteggioId)
+    .maybeSingle();
+
+  if (!carteggio) return;
+  if (carteggio.stato !== "attivo") return;
+
+  const isA = carteggio.partecipante_a_id === user.id;
+  const isB = carteggio.partecipante_b_id === user.id;
+  if (!isA && !isB) return;
+
+  // Verifico soglia messaggi
+  const { count } = await supabase
+    .from("messaggi")
+    .select("id", { count: "exact", head: true })
+    .eq("carteggio_id", carteggioId);
+
+  if ((count ?? 0) < PHOTO_UNLOCK_AFTER_MESSAGES) return;
+
+  // Update il flag corrispondente
+  const update = isA
+    ? { foto_sbloccata_a: true }
+    : { foto_sbloccata_b: true };
+
+  await supabase.from("carteggi").update(update).eq("id", carteggioId);
+
+  revalidatePath(`/carteggi/${carteggioId}`);
 }
