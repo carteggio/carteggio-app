@@ -84,6 +84,7 @@ export default async function CarteggioPage({
 
   const sonoA = carteggio.partecipante_a_id === user.id;
   const altro = sonoA ? b : a;
+  const altroId = sonoA ? carteggio.partecipante_b_id : carteggio.partecipante_a_id;
   const io = sonoA ? a : b;
 
   const ioSbloccato = sonoA
@@ -107,6 +108,9 @@ export default async function CarteggioPage({
       created_at: m.created_at,
     })),
     currentUserId: user.id,
+    altroPartecipante: altro
+      ? { id: altroId, nome: altro.nome_battesimo }
+      : undefined,
   });
 
   const numMessaggi = messaggi.length;
@@ -115,7 +119,7 @@ export default async function CarteggioPage({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Nav active="carteggi" />
+      <Nav />
       <main className="flex-1 px-6 py-8 pb-32">
         <div className="max-w-xl mx-auto">
           <Link
@@ -144,7 +148,6 @@ export default async function CarteggioPage({
             </p>
           </header>
 
-          {/* Foto: sblocco mutuale dopo 5 messaggi */}
           {photoUnlockAvailable && (
             <section className="mb-10">
               {entrambiSbloccati ? (
@@ -234,7 +237,6 @@ export default async function CarteggioPage({
             </section>
           )}
 
-          {/* Eco di origine collassato */}
           {ecoOrigine && (
             <details className="mb-10 border border-rule rounded-lg p-4 bg-paper-deep">
               <summary className="font-sans text-xs tracking-widest uppercase text-ink-faded cursor-pointer hover:text-accent">
@@ -246,7 +248,6 @@ export default async function CarteggioPage({
             </details>
           )}
 
-          {/* Messaggi */}
           {messaggi.length === 0 ? (
             <p className="font-serif italic text-center text-ink-faded">
               Il carteggio è vuoto.
@@ -273,7 +274,6 @@ export default async function CarteggioPage({
             </div>
           )}
 
-          {/* Form di invio */}
           <div className="border-t border-rule pt-8">
             {sendCheck.canSend ? (
               <MessaggioForm
