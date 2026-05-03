@@ -1,6 +1,29 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile) {
+      redirect("/feed");
+    } else {
+      redirect("/onboarding/eta");
+    }
+  }
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
       <div className="max-w-xl w-full text-center">
@@ -19,7 +42,6 @@ export default function Home() {
           <br />
           Quando sarà il momento, ti scriveremo.
         </p>
-
         <div className="mt-12">
           <Link
             href="/login"
