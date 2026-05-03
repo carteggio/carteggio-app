@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 type NavSection = "feed" | "scrivi" | "carteggi" | "profilo";
@@ -75,10 +78,22 @@ const TABS: Tab[] = [
   { id: "profilo", label: "tu", href: "/profilo" },
 ];
 
-export default function Nav({ active }: { active?: NavSection }) {
+function detectActive(pathname: string): NavSection | undefined {
+  if (pathname.startsWith("/feed") || pathname.startsWith("/eco")) return "feed";
+  if (pathname.startsWith("/scrivi")) return "scrivi";
+  if (pathname.startsWith("/carteggi")) return "carteggi";
+  if (pathname.startsWith("/profilo")) return "profilo";
+  return undefined;
+}
+
+// Nota: il prop `active` è opzionale e ignorato. Mantenuto per retrocompatibilità.
+// L'highlight è determinato in tempo reale da usePathname.
+export default function Nav({}: { active?: NavSection } = {}) {
+  const pathname = usePathname();
+  const active = detectActive(pathname);
+
   return (
     <>
-      {/* Top header — brand only */}
       <header className="sticky top-0 z-10 border-b border-rule bg-paper/95 backdrop-blur-sm">
         <div className="max-w-xl mx-auto px-6 py-3 text-center">
           <Link
@@ -90,7 +105,6 @@ export default function Nav({ active }: { active?: NavSection }) {
         </div>
       </header>
 
-      {/* Bottom tab bar */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-10 border-t border-rule bg-paper/95 backdrop-blur-sm"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -100,6 +114,7 @@ export default function Nav({ active }: { active?: NavSection }) {
             <Link
               key={tab.id}
               href={tab.href}
+              prefetch={true}
               className={`flex flex-col items-center gap-1 px-4 py-2 transition-colors ${
                 active === tab.id
                   ? "text-accent"
