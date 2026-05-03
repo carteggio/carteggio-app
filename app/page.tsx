@@ -1,6 +1,8 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
+    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16 relative">
       <div className="max-w-xl w-full text-center">
         <p className="font-sans text-xs tracking-[0.3em] uppercase text-ink-faded mb-6">
           in arrivo · brescia · bergamo
@@ -18,6 +20,14 @@ export default function Home() {
           Quando sarà il momento, ti scriveremo.
         </p>
       </div>
+
+      {/* Link discreto a /login per le early adopter */}
+      <Link
+        href="/login"
+        className="absolute bottom-8 right-8 font-sans text-xs tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
+      >
+        entra
+      </Link>
     </main>
   );
 }
