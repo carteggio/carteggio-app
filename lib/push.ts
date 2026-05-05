@@ -6,7 +6,10 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const raw = atob(base64);
-  const out = new Uint8Array(raw.length);
+  // Crea esplicitamente un ArrayBuffer (non ArrayBufferLike) per soddisfare
+  // BufferSource in modalità TypeScript strict.
+  const buffer = new ArrayBuffer(raw.length);
+  const out = new Uint8Array(buffer);
   for (let i = 0; i < raw.length; ++i) {
     out[i] = raw.charCodeAt(i);
   }
@@ -24,9 +27,10 @@ export async function subscribeToPush(): Promise<{ ok: boolean; error?: string }
 
   try {
     const reg = await navigator.serviceWorker.ready;
+    const keyArray = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      applicationServerKey: keyArray.buffer as ArrayBuffer,
     });
 
     const subJson = sub.toJSON();
