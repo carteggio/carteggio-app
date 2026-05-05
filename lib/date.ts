@@ -1,3 +1,5 @@
+const TIMEZONE = "Europe/Rome";
+
 export function formatRelativeDate(iso: string): string {
   const date = new Date(iso);
   const now = new Date();
@@ -17,6 +19,7 @@ export function formatRelativeDate(iso: string): string {
     return d === 1 ? "ieri" : `${d} giorni fa`;
   }
   return date.toLocaleDateString("it-IT", {
+    timeZone: TIMEZONE,
     day: "numeric",
     month: "long",
     year: "numeric",

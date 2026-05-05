@@ -31,7 +31,8 @@ export default async function ProfiloPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Nav active="profilo" />
+      <Nav />
+
       <main className="flex-1 px-6 py-12 pb-32">
         <div className="max-w-xl mx-auto">
           <header className="text-center mb-16">
@@ -45,7 +46,7 @@ export default async function ProfiloPage() {
               {profile.fascia_eta} anni
             </p>
 
-            {/* Foto profilo: visibile solo a te */}
+            {/* Foto profilo */}
             <div className="mt-8 flex flex-col items-center gap-3">
               {profile.foto_url ? (
                 <>
@@ -102,9 +103,17 @@ export default async function ProfiloPage() {
                   >
                     {p.contenuto_testo}
                   </div>
-                  <p className="font-serif italic text-sm text-ink-faded mt-4">
-                    {formatRelativeDate(p.created_at)}
-                  </p>
+                  <div className="mt-4 flex items-baseline justify-between gap-3">
+                    <p className="font-serif italic text-sm text-ink-faded">
+                      {formatRelativeDate(p.created_at)}
+                    </p>
+                    <Link
+                      href={`/pezzo/${p.id}/modifica`}
+                      className="font-sans text-xs tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
+                    >
+                      modifica · elimina
+                    </Link>
+                  </div>
                 </article>
               ))}
             </div>
@@ -124,6 +133,21 @@ export default async function ProfiloPage() {
               </p>
             )}
           </div>
+
+          {/* Sezione amministrazione (solo per admin) */}
+          {profile.is_admin && (
+            <div className="mt-16 pt-8 border-t border-rule text-center">
+              <p className="font-sans text-xs tracking-[0.3em] uppercase text-accent mb-3">
+                amministrazione
+              </p>
+              <Link
+                href="/admin/segnalazioni"
+                className="inline-block font-sans text-sm tracking-widest uppercase text-ink-faded border border-rule rounded-full px-5 py-2 hover:border-accent hover:text-accent transition-colors"
+              >
+                gestisci segnalazioni
+              </Link>
+            </div>
+          )}
 
           <form action="/auth/logout" method="POST" className="mt-16 text-center">
             <button
