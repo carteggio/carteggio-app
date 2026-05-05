@@ -5,6 +5,7 @@ import { getCurrentProfile } from "@/lib/auth/profile";
 import { FORMATO_LABEL, type FormatoPezzo } from "@/lib/formati";
 import { formatRelativeDate } from "@/lib/date";
 import Nav from "@/app/components/nav";
+import NotificationToggle from "@/app/components/notification-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,6 @@ export default async function ProfiloPage() {
               {profile.fascia_eta} anni
             </p>
 
-            {/* Foto profilo */}
             <div className="mt-8 flex flex-col items-center gap-3">
               {profile.foto_url ? (
                 <>
@@ -134,9 +134,14 @@ export default async function ProfiloPage() {
             )}
           </div>
 
+          {/* Impostazioni: notifiche */}
+          <div className="mt-16 pt-8 border-t border-rule">
+            <NotificationToggle />
+          </div>
+
           {/* Sezione amministrazione (solo per admin) */}
           {profile.is_admin && (
-            <div className="mt-16 pt-8 border-t border-rule text-center">
+            <div className="mt-8 text-center">
               <p className="font-sans text-xs tracking-[0.3em] uppercase text-accent mb-3">
                 amministrazione
               </p>

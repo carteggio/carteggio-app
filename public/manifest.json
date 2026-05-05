@@ -2,24 +2,38 @@
   "name": "Carteggio",
   "short_name": "Carteggio",
   "description": "Conoscersi per le parole, non per la foto",
-  "start_url": "/",
+  "start_url": "/feed",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f6f1e7",
   "theme_color": "#7a2e2a",
   "lang": "it",
+  "scope": "/",
+  "categories": ["social", "lifestyle"],
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

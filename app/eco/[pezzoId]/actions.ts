@@ -9,6 +9,7 @@ import {
 } from "@/lib/eco";
 import { contaEchiOggi } from "@/lib/eco-server";
 import { checkContent } from "@/lib/moderazione";
+import { inviaPushAUtente } from "@/lib/push-server";
 
 type State = { error: string | null };
 
@@ -28,17 +29,12 @@ export async function saveEco(
 
   const trimmed = testo.trim();
   if (trimmed.length < ECO_TESTO_MIN) {
-    return {
-      error: `L'eco deve essere lungo almeno ${ECO_TESTO_MIN} caratteri.`,
-    };
+    return { error: `L'eco deve essere lungo almeno ${ECO_TESTO_MIN} caratteri.` };
   }
   if (trimmed.length > ECO_TESTO_MAX) {
-    return {
-      error: `L'eco non può superare i ${ECO_TESTO_MAX} caratteri.`,
-    };
+    return { error: `L'eco non può superare i ${ECO_TESTO_MAX} caratteri.` };
   }
 
-  // Moderazione
   const mod = checkContent(trimmed);
   if (!mod.ok) {
     return { error: mod.reason };
@@ -75,9 +71,7 @@ export async function saveEco(
 
   const oggi = await contaEchiOggi(user.id);
   if (oggi >= ECO_LIMITE_GIORNALIERO) {
-    return {
-      error: `Hai già lasciato ${ECO_LIMITE_GIORNALIERO} echi oggi. Torna domani.`,
-    };
+    return { error: `Hai già lasciato ${ECO_LIMITE_GIORNALIERO} echi oggi. Torna domani.` };
   }
 
   const { error: insertError } = await supabase.from("echi").insert({
@@ -92,6 +86,21 @@ export async function saveEco(
     }
     return { error: insertError.message };
   }
+
+  // Trigger push notification all'autore del pezzo
+  // Best-effort: errori di push non bloccano il flusso.
+  const { data: mittente } = await supabase
+    .from("users")
+    .select("nome_battesimo")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  inviaPushAUtente(pezzo.autore_id, {
+    title: "Hai un eco",
+    body: `${mittente?.nome_battesimo ?? "Qualcuno"} ti ha scritto un eco su un tuo pezzo.`,
+    url: "/carteggi",
+    tag: `eco-${pezzo.autore_id}`,
+  }).catch((e) => console.error("push eco:", e));
 
   redirect("/eco/inviato");
 }

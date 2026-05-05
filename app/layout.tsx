@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
+import SWRegister from "@/app/components/sw-register";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -19,13 +20,17 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Carteggio",
-  description: "Conoscersi per le parole, non per la foto. In arrivo a Brescia e Bergamo.",
+  description:
+    "Conoscersi per le parole, non per la foto. In arrivo a Brescia e Bergamo.",
   manifest: "/manifest.json",
-  themeColor: "#7a2e2a",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Carteggio",
+  },
+  icons: {
+    icon: "/favicon.png",
+    apple: "/apple-touch-icon.png",
   },
   openGraph: {
     title: "Carteggio",
@@ -35,6 +40,13 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#7a2e2a",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -42,7 +54,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it" className={`${cormorant.variable} ${inter.variable}`}>
-      <body className="bg-paper text-ink font-sans antialiased">{children}</body>
+      <body className="bg-paper text-ink font-sans antialiased">
+        <SWRegister />
+        {children}
+      </body>
     </html>
   );
 }

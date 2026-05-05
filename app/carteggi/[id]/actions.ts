@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { canSendMessage } from "@/lib/carteggio-server";
 import { PHOTO_UNLOCK_AFTER_MESSAGES } from "@/lib/foto";
 import { checkContent } from "@/lib/moderazione";
+import { inviaPushAUtente } from "@/lib/push-server";
 
 type State = { error: string | null };
 
@@ -38,8 +39,7 @@ export async function sendMessaggio(
     .maybeSingle();
 
   if (!carteggio) return { error: "Carteggio non trovato." };
-  if (carteggio.stato !== "attivo")
-    return { error: "Carteggio archiviato o chiuso." };
+  if (carteggio.stato !== "attivo") return { error: "Carteggio archiviato o chiuso." };
   if (
     carteggio.partecipante_a_id !== user.id &&
     carteggio.partecipante_b_id !== user.id
@@ -53,19 +53,17 @@ export async function sendMessaggio(
     .eq("carteggio_id", carteggioId)
     .order("created_at", { ascending: true });
 
-  // Identifica nome dell'altro partecipante (per messaggi cooldown)
   const sonoA = carteggio.partecipante_a_id === user.id;
   const altroId = sonoA ? carteggio.partecipante_b_id : carteggio.partecipante_a_id;
   const a = carteggio.a as unknown as { nome_battesimo: string } | null;
   const b = carteggio.b as unknown as { nome_battesimo: string } | null;
   const altroNome = sonoA ? b?.nome_battesimo : a?.nome_battesimo;
+  const ioNome = sonoA ? a?.nome_battesimo : b?.nome_battesimo;
 
   const sendCheck = canSendMessage({
     messages: messaggi ?? [],
     currentUserId: user.id,
-    altroPartecipante: altroNome
-      ? { id: altroId, nome: altroNome }
-      : undefined,
+    altroPartecipante: altroNome ? { id: altroId, nome: altroNome } : undefined,
   });
 
   if (!sendCheck.canSend) {
@@ -74,18 +72,12 @@ export async function sendMessaggio(
 
   const trimmed = messaggio.trim();
   if (trimmed.length < sendCheck.minLength) {
-    return {
-      error: `Il messaggio deve essere almeno ${sendCheck.minLength} caratteri.`,
-    };
+    return { error: `Il messaggio deve essere almeno ${sendCheck.minLength} caratteri.` };
   }
   if (trimmed.length > sendCheck.maxLength) {
-    return {
-      error: `Il messaggio non può superare i ${sendCheck.maxLength} caratteri.`,
-    };
+    return { error: `Il messaggio non può superare i ${sendCheck.maxLength} caratteri.` };
   }
 
-  // Moderazione (solo nei primi 6 messaggi della slow phase, dove vogliamo
-  // davvero impedire scambio di contatti. In free phase rilassiamo.)
   if (sendCheck.phase === "slow") {
     const mod = checkContent(trimmed);
     if (!mod.ok) {
@@ -111,6 +103,14 @@ export async function sendMessaggio(
     .from("carteggi")
     .update({ ultimo_messaggio_at: new Date().toISOString() })
     .eq("id", carteggioId);
+
+  // Push all'altra persona
+  inviaPushAUtente(altroId, {
+    title: sendCheck.phase === "slow" ? "Una nuova lettera" : "Un messaggio",
+    body: `${ioNome ?? "Qualcuno"} ti ha scritto.`,
+    url: `/carteggi/${carteggioId}`,
+    tag: `msg-${carteggioId}`,
+  }).catch((e) => console.error("push messaggio:", e));
 
   revalidatePath(`/carteggi/${carteggioId}`);
   return { error: null };
@@ -182,12 +182,10 @@ export async function bloccaUtente(formData: FormData) {
 
   if (altroId === user.id) return;
 
-  // Inserisce blocco (se non esiste già)
   await supabase
     .from("blocchi")
     .insert({ blocker_id: user.id, blocked_id: altroId });
 
-  // Archivia carteggi attivi tra i due
   await supabase
     .from("carteggi")
     .update({ stato: "archiviato" })

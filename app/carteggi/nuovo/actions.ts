@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MESSAGGIO_MIN_SLOW, MESSAGGIO_MAX_SLOW } from "@/lib/carteggio";
 import { checkContent } from "@/lib/moderazione";
+import { inviaPushAUtente } from "@/lib/push-server";
 
 type State = { error: string | null };
 
@@ -23,17 +24,12 @@ export async function apriCarteggio(
 
   const trimmed = messaggio.trim();
   if (trimmed.length < MESSAGGIO_MIN_SLOW) {
-    return {
-      error: `La prima lettera deve essere almeno ${MESSAGGIO_MIN_SLOW} caratteri.`,
-    };
+    return { error: `La prima lettera deve essere almeno ${MESSAGGIO_MIN_SLOW} caratteri.` };
   }
   if (trimmed.length > MESSAGGIO_MAX_SLOW) {
-    return {
-      error: `La lettera non può superare i ${MESSAGGIO_MAX_SLOW} caratteri.`,
-    };
+    return { error: `La lettera non può superare i ${MESSAGGIO_MAX_SLOW} caratteri.` };
   }
 
-  // Moderazione
   const mod = checkContent(trimmed);
   if (!mod.ok) {
     return { error: mod.reason };
@@ -105,6 +101,20 @@ export async function apriCarteggio(
     .from("carteggi")
     .update({ ultimo_messaggio_at: new Date().toISOString() })
     .eq("id", carteggio.id);
+
+  // Push al destinatario (chi aveva mandato l'eco)
+  const { data: ioNome } = await supabase
+    .from("users")
+    .select("nome_battesimo")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  inviaPushAUtente(eco.mittente_id, {
+    title: "Hai una risposta",
+    body: `${ioNome?.nome_battesimo ?? "Qualcuno"} ha aperto un carteggio con te.`,
+    url: `/carteggi/${carteggio.id}`,
+    tag: `carteggio-${carteggio.id}`,
+  }).catch((e) => console.error("push carteggio:", e));
 
   redirect(`/carteggi/${carteggio.id}`);
 }
