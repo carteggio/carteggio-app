@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 type FeedItem = {
   id: string;
+  autore_id: string;
   formato: string;
   contenuto_testo: string | null;
   created_at: string;
@@ -29,12 +30,11 @@ export default async function FeedPage() {
     .from("pezzi")
     .select(
       `
-      id, formato, contenuto_testo, created_at,
+      id, autore_id, formato, contenuto_testo, created_at,
       autore:users!autore_id ( nome_battesimo, fascia_eta )
     `
     )
     .eq("stato", "visibile")
-    .neq("autore_id", user.id)
     .order("created_at", { ascending: false })
     .limit(10);
 
@@ -96,14 +96,20 @@ export default async function FeedPage() {
           {items.length > 0 && (
             <div className="space-y-12">
               {items.map((p) => {
+                const isMine = p.autore_id === user.id;
                 const giaEcoato = pezziGiaEcoati.has(p.id);
                 return (
                   <article
                     key={p.id}
-                    className="border-b border-rule pb-12 last:border-b-0"
+                    className={`border-b border-rule pb-12 last:border-b-0 ${
+                      isMine ? "" : ""
+                    }`}
                   >
                     <p className="font-sans text-xs tracking-widest uppercase text-ink-faded mb-4">
                       {FORMATO_LABEL[p.formato as FormatoPezzo]}
+                      {isMine && (
+                        <span className="ml-2 text-accent">· tuo</span>
+                      )}
                     </p>
                     <div
                       className={`font-serif whitespace-pre-line leading-relaxed ${
@@ -118,11 +124,17 @@ export default async function FeedPage() {
                     </div>
                     <div className="mt-6 flex items-baseline justify-between">
                       <p className="font-serif italic text-sm text-ink-soft">
-                        — {p.autore?.nome_battesimo ?? "anonimo"}
-                        {p.autore?.fascia_eta && (
-                          <span className="text-ink-faded">
-                            , {p.autore.fascia_eta}
-                          </span>
+                        {isMine ? (
+                          <>— tu</>
+                        ) : (
+                          <>
+                            — {p.autore?.nome_battesimo ?? "anonimo"}
+                            {p.autore?.fascia_eta && (
+                              <span className="text-ink-faded">
+                                , {p.autore.fascia_eta}
+                              </span>
+                            )}
+                          </>
                         )}
                       </p>
                       <p className="font-serif italic text-xs text-ink-faded">
@@ -131,7 +143,14 @@ export default async function FeedPage() {
                     </div>
 
                     <div className="mt-4 flex items-center justify-between gap-3">
-                      {giaEcoato ? (
+                      {isMine ? (
+                        <Link
+                          href={`/pezzo/${p.id}/modifica`}
+                          className="font-sans text-xs tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
+                        >
+                          modifica · elimina
+                        </Link>
+                      ) : giaEcoato ? (
                         <p className="font-serif italic text-sm text-ink-faded">
                           Hai già lasciato un eco a questo pezzo.
                         </p>
@@ -143,12 +162,14 @@ export default async function FeedPage() {
                           lascia un eco
                         </Link>
                       )}
-                      <Link
-                        href={`/segnala?tipo=pezzo&id=${p.id}`}
-                        className="font-sans text-[10px] tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
-                      >
-                        segnala
-                      </Link>
+                      {!isMine && (
+                        <Link
+                          href={`/segnala?tipo=pezzo&id=${p.id}`}
+                          className="font-sans text-[10px] tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
+                        >
+                          segnala
+                        </Link>
+                      )}
                     </div>
                   </article>
                 );

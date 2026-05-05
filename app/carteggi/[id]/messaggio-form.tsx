@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { sendMessaggio } from "./actions";
 import type { CarteggioPhase } from "@/lib/carteggio-server";
@@ -41,6 +41,21 @@ export default function MessaggioForm({
 }) {
   const [state, formAction] = useFormState(sendMessaggio, initialState);
   const [testo, setTesto] = useState("");
+  const previousStateRef = useRef<State | null>(null);
+
+  // Quando l'invio ha successo (state.error null e state è cambiato dal
+  // render precedente), pulisce il textarea così l'utente può scrivere
+  // il prossimo messaggio senza cancellare a mano.
+  useEffect(() => {
+    if (
+      previousStateRef.current !== null &&
+      state !== previousStateRef.current &&
+      state.error === null
+    ) {
+      setTesto("");
+    }
+    previousStateRef.current = state;
+  }, [state]);
 
   const len = testo.length;
   const isValid = len >= minLength && len <= maxLength;
