@@ -10,6 +10,7 @@ import {
 import { contaEchiOggi } from "@/lib/eco-server";
 import { checkContent } from "@/lib/moderazione";
 import { inviaPushAUtente } from "@/lib/push-server";
+import { getUnreadEchiCount } from "@/lib/unread-server";
 
 type State = { error: string | null };
 
@@ -87,19 +88,22 @@ export async function saveEco(
     return { error: insertError.message };
   }
 
-  // Trigger push notification all'autore del pezzo
-  // Best-effort: errori di push non bloccano il flusso.
+  // Trigger push all'autore del pezzo
   const { data: mittente } = await supabase
     .from("users")
     .select("nome_battesimo")
     .eq("id", user.id)
     .maybeSingle();
 
+  // Conta gli echi non letti per badge sull'icona
+  const badgeCount = await getUnreadEchiCount(pezzo.autore_id);
+
   inviaPushAUtente(pezzo.autore_id, {
     title: "Hai un eco",
     body: `${mittente?.nome_battesimo ?? "Qualcuno"} ti ha scritto un eco su un tuo pezzo.`,
     url: "/carteggi",
     tag: `eco-${pezzo.autore_id}`,
+    appBadge: badgeCount,
   }).catch((e) => console.error("push eco:", e));
 
   redirect("/eco/inviato");

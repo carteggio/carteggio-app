@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MESSAGGIO_MIN_SLOW, MESSAGGIO_MAX_SLOW } from "@/lib/carteggio";
 import { checkContent } from "@/lib/moderazione";
 import { inviaPushAUtente } from "@/lib/push-server";
+import { getUnreadEchiCount } from "@/lib/unread-server";
 
 type State = { error: string | null };
 
@@ -102,18 +103,21 @@ export async function apriCarteggio(
     .update({ ultimo_messaggio_at: new Date().toISOString() })
     .eq("id", carteggio.id);
 
-  // Push al destinatario (chi aveva mandato l'eco)
+  // Push al destinatario, con badge count
   const { data: ioNome } = await supabase
     .from("users")
     .select("nome_battesimo")
     .eq("id", user.id)
     .maybeSingle();
 
+  const badgeCount = await getUnreadEchiCount(eco.mittente_id);
+
   inviaPushAUtente(eco.mittente_id, {
     title: "Hai una risposta",
     body: `${ioNome?.nome_battesimo ?? "Qualcuno"} ha aperto un carteggio con te.`,
     url: `/carteggi/${carteggio.id}`,
     tag: `carteggio-${carteggio.id}`,
+    appBadge: badgeCount,
   }).catch((e) => console.error("push carteggio:", e));
 
   redirect(`/carteggi/${carteggio.id}`);

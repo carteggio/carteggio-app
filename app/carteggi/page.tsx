@@ -5,6 +5,7 @@ import { getCurrentProfile } from "@/lib/auth/profile";
 import { FORMATO_LABEL, type FormatoPezzo } from "@/lib/formati";
 import { formatRelativeDate } from "@/lib/date";
 import Nav from "@/app/components/nav";
+import ClearAppBadge from "@/app/components/clear-badge";
 import { archiviaEco } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +76,7 @@ export default async function CarteggiPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Nav />
+      <ClearAppBadge />
       <main className="flex-1 px-6 py-12 pb-32">
         <div className="max-w-xl mx-auto">
           <header className="text-center mb-12">

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 type NavSection = "feed" | "scrivi" | "carteggi" | "profilo";
@@ -82,15 +83,39 @@ function detectActive(pathname: string): NavSection | undefined {
   if (pathname.startsWith("/feed") || pathname.startsWith("/eco")) return "feed";
   if (pathname.startsWith("/scrivi")) return "scrivi";
   if (pathname.startsWith("/carteggi")) return "carteggi";
-  if (pathname.startsWith("/profilo")) return "profilo";
+  if (pathname.startsWith("/profilo") || pathname.startsWith("/admin")) return "profilo";
   return undefined;
 }
 
-// Nota: il prop `active` è opzionale e ignorato. Mantenuto per retrocompatibilità.
-// L'highlight è determinato in tempo reale da usePathname.
-export default function Nav({}: { active?: NavSection } = {}) {
+export default function Nav() {
   const pathname = usePathname();
   const active = detectActive(pathname);
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchUnread() {
+      try {
+        const res = await fetch("/api/unread");
+        const data = await res.json();
+        if (!cancelled) setUnread(typeof data.count === "number" ? data.count : 0);
+      } catch {
+        // silently ignore
+      }
+    }
+
+    fetchUnread();
+
+    // Aggiorna quando l'utente torna sulla tab del browser
+    const onFocus = () => fetchUnread();
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [pathname]);
 
   return (
     <>
@@ -110,23 +135,36 @@ export default function Nav({}: { active?: NavSection } = {}) {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="max-w-xl mx-auto px-2 py-2 flex justify-around items-center">
-          {TABS.map((tab) => (
-            <Link
-              key={tab.id}
-              href={tab.href}
-              prefetch={true}
-              className={`flex flex-col items-center gap-1 px-4 py-2 transition-colors ${
-                active === tab.id
-                  ? "text-accent"
-                  : "text-ink-faded hover:text-accent"
-              }`}
-            >
-              {ICONS[tab.id]}
-              <span className="font-sans text-[10px] tracking-widest uppercase">
-                {tab.label}
-              </span>
-            </Link>
-          ))}
+          {TABS.map((tab) => {
+            const showBadge = tab.id === "carteggi" && unread > 0;
+            return (
+              <Link
+                key={tab.id}
+                href={tab.href}
+                prefetch={true}
+                className={`flex flex-col items-center gap-1 px-4 py-2 transition-colors ${
+                  active === tab.id
+                    ? "text-accent"
+                    : "text-ink-faded hover:text-accent"
+                }`}
+              >
+                <div className="relative">
+                  {ICONS[tab.id]}
+                  {showBadge && (
+                    <span
+                      className="absolute -top-1.5 -right-2 bg-accent text-paper text-[10px] font-sans font-semibold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center leading-none"
+                      aria-label={`${unread} non letti`}
+                    >
+                      {unread > 9 ? "9+" : unread}
+                    </span>
+                  )}
+                </div>
+                <span className="font-sans text-[10px] tracking-widest uppercase">
+                  {tab.label}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </>

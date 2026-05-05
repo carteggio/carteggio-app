@@ -7,6 +7,7 @@ import { canSendMessage } from "@/lib/carteggio-server";
 import { PHOTO_UNLOCK_AFTER_MESSAGES } from "@/lib/foto";
 import { checkContent } from "@/lib/moderazione";
 import { inviaPushAUtente } from "@/lib/push-server";
+import { getUnreadEchiCount } from "@/lib/unread-server";
 
 type State = { error: string | null };
 
@@ -104,12 +105,14 @@ export async function sendMessaggio(
     .update({ ultimo_messaggio_at: new Date().toISOString() })
     .eq("id", carteggioId);
 
-  // Push all'altra persona
+  // Push all'altra persona, con badge count
+  const badgeCount = await getUnreadEchiCount(altroId);
   inviaPushAUtente(altroId, {
     title: sendCheck.phase === "slow" ? "Una nuova lettera" : "Un messaggio",
     body: `${ioNome ?? "Qualcuno"} ti ha scritto.`,
     url: `/carteggi/${carteggioId}`,
     tag: `msg-${carteggioId}`,
+    appBadge: badgeCount,
   }).catch((e) => console.error("push messaggio:", e));
 
   revalidatePath(`/carteggi/${carteggioId}`);

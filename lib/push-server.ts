@@ -25,13 +25,9 @@ export type PushPayload = {
   body: string;
   url?: string;
   tag?: string;
+  appBadge?: number;
 };
 
-/**
- * Invia una push a tutte le subscription dell'utente.
- * Best-effort: errori per singole subscription vengono loggati ma non bloccano.
- * Subscription "morte" (410 Gone) vengono cancellate dal DB.
- */
 export async function inviaPushAUtente(
   userId: string,
   payload: PushPayload
@@ -55,17 +51,13 @@ export async function inviaPushAUtente(
         await webpush.sendNotification(
           {
             endpoint: sub.endpoint,
-            keys: {
-              p256dh: sub.p256dh,
-              auth: sub.auth_key,
-            },
+            keys: { p256dh: sub.p256dh, auth: sub.auth_key },
           },
           body
         );
       } catch (err) {
         const status = (err as { statusCode?: number }).statusCode;
         if (status === 410 || status === 404) {
-          // Subscription morta, la rimuovo
           await admin.from("push_subscriptions").delete().eq("id", sub.id);
         } else {
           console.error("Errore invio push:", err);
