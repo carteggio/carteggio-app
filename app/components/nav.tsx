@@ -87,7 +87,12 @@ function detectActive(pathname: string): NavSection | undefined {
   return undefined;
 }
 
-export default function Nav() {
+// Nota: il prop `active` è opzionale e ignorato (mantenuto per compatibilità
+// con pagine vecchie che ancora lo passano). L'highlight è sempre derivato
+// da usePathname.
+type NavProps = { active?: NavSection };
+
+export default function Nav(_props: NavProps = {}) {
   const pathname = usePathname();
   const active = detectActive(pathname);
   const [unread, setUnread] = useState(0);
@@ -107,7 +112,6 @@ export default function Nav() {
 
     fetchUnread();
 
-    // Aggiorna quando l'utente torna sulla tab del browser
     const onFocus = () => fetchUnread();
     window.addEventListener("focus", onFocus);
 
