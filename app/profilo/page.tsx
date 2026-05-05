@@ -6,6 +6,7 @@ import { FORMATO_LABEL, type FormatoPezzo } from "@/lib/formati";
 import { formatRelativeDate } from "@/lib/date";
 import Nav from "@/app/components/nav";
 import NotificationToggle from "@/app/components/notification-toggle";
+import InstallPrompt from "@/app/components/install-prompt";
 
 export const dynamic = "force-dynamic";
 
@@ -134,8 +135,9 @@ export default async function ProfiloPage() {
             )}
           </div>
 
-          {/* Impostazioni: notifiche */}
-          <div className="mt-16 pt-8 border-t border-rule">
+          {/* Sezione impostazioni: install + notifiche */}
+          <div className="mt-16 pt-8 border-t border-rule space-y-4">
+            <InstallPrompt />
             <NotificationToggle />
           </div>
 
