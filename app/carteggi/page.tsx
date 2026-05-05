@@ -42,7 +42,6 @@ export default async function CarteggiPage() {
 
   const supabase = createClient();
 
-  // 1. Echi ricevuti in attesa di risposta (i miei pezzi)
   const { data: echiRaw } = await supabase
     .from("echi")
     .select(
@@ -59,7 +58,6 @@ export default async function CarteggiPage() {
     pezzo: { autore_id: string } | null;
   })[]).filter((e) => e.pezzo && e.pezzo.autore_id === user.id);
 
-  // 2. Carteggi attivi
   const { data: carteggiRaw } = await supabase
     .from("carteggi")
     .select(
@@ -76,7 +74,7 @@ export default async function CarteggiPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Nav active="carteggi" />
+      <Nav />
       <main className="flex-1 px-6 py-12 pb-32">
         <div className="max-w-xl mx-auto">
           <header className="text-center mb-12">
@@ -101,7 +99,6 @@ export default async function CarteggiPage() {
             </div>
           )}
 
-          {/* Echi in attesa */}
           {echiInAttesa.length > 0 && (
             <section className="mb-16">
               <h2 className="font-sans text-xs tracking-widest uppercase text-ink-faded mb-6">
@@ -165,13 +162,21 @@ export default async function CarteggiPage() {
                         </button>
                       </form>
                     </div>
+
+                    <div className="mt-3 text-right">
+                      <Link
+                        href={`/segnala?tipo=eco&id=${e.id}`}
+                        className="font-sans text-[10px] tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
+                      >
+                        segnala questo eco
+                      </Link>
+                    </div>
                   </article>
                 ))}
               </div>
             </section>
           )}
 
-          {/* Carteggi attivi */}
           {carteggi.length > 0 && (
             <section>
               <h2 className="font-sans text-xs tracking-widest uppercase text-ink-faded mb-6">

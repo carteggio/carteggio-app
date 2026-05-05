@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { findFormato, countWords, type FormatoPezzo } from "@/lib/formati";
+import { checkContent } from "@/lib/moderazione";
 
 type State = { error: string | null };
 
@@ -35,7 +36,6 @@ export async function savePezzo(
 
   const trimmed = contenuto.trim();
 
-  // Validazione formato-specifica
   if (fmt.exactWords) {
     const words = countWords(trimmed);
     if (words !== fmt.exactWords) {
@@ -49,13 +49,18 @@ export async function savePezzo(
     };
   }
 
+  // Filtro moderazione
+  const mod = checkContent(trimmed);
+  if (!mod.ok) {
+    return { error: mod.reason };
+  }
+
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Verifica limite (server-side, di nuovo, per sicurezza)
   const { count } = await supabase
     .from("pezzi")
     .select("id", { count: "exact", head: true })
@@ -64,7 +69,8 @@ export async function savePezzo(
 
   if ((count ?? 0) >= 5) {
     return {
-      error: "Hai già 5 pezzi attivi. Eliminane uno dal profilo prima di scriverne un altro.",
+      error:
+        "Hai già 5 pezzi attivi. Eliminane uno dal profilo prima di scriverne un altro.",
     };
   }
 
@@ -75,6 +81,11 @@ export async function savePezzo(
   });
 
   if (insertError) {
+    if (insertError.message.includes("row-level security")) {
+      return {
+        error: "Il tuo account non è attivo. Riprova più tardi o contatta il supporto.",
+      };
+    }
     return { error: insertError.message };
   }
 

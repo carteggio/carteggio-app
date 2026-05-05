@@ -8,7 +8,7 @@ import { PHOTO_UNLOCK_AFTER_MESSAGES } from "@/lib/foto";
 import { formatRelativeDate } from "@/lib/date";
 import Nav from "@/app/components/nav";
 import MessaggioForm from "./messaggio-form";
-import { sbloccaFoto } from "./actions";
+import { sbloccaFoto, bloccaUtente } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -116,6 +116,7 @@ export default async function CarteggioPage({
   const numMessaggi = messaggi.length;
   const photoUnlockAvailable = numMessaggi >= PHOTO_UNLOCK_AFTER_MESSAGES;
   const entrambiSbloccati = ioSbloccato && altroSbloccato;
+  const carteggioAttivo = carteggio.stato === "attivo";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -142,13 +143,15 @@ export default async function CarteggioPage({
               )}
             </h1>
             <p className="font-sans text-xs tracking-widest uppercase text-ink-faded mt-4">
-              {sendCheck.phase === "slow"
-                ? `lettera ${numMessaggi} di ${SLOW_PHASE_MESSAGGI}`
-                : "chat libera"}
+              {!carteggioAttivo
+                ? `archiviato`
+                : sendCheck.phase === "slow"
+                  ? `lettera ${numMessaggi} di ${SLOW_PHASE_MESSAGGI}`
+                  : "chat libera"}
             </p>
           </header>
 
-          {photoUnlockAvailable && (
+          {photoUnlockAvailable && carteggioAttivo && (
             <section className="mb-10">
               {entrambiSbloccati ? (
                 <div className="flex justify-center gap-6 py-4">
@@ -274,20 +277,62 @@ export default async function CarteggioPage({
             </div>
           )}
 
-          <div className="border-t border-rule pt-8">
-            {sendCheck.canSend ? (
-              <MessaggioForm
-                carteggioId={carteggio.id}
-                phase={sendCheck.phase}
-                minLength={sendCheck.minLength}
-                maxLength={sendCheck.maxLength}
-              />
-            ) : (
-              <p className="font-serif italic text-center text-ink-soft leading-relaxed">
-                {sendCheck.reason}
+          {carteggioAttivo && (
+            <div className="border-t border-rule pt-8">
+              {sendCheck.canSend ? (
+                <MessaggioForm
+                  carteggioId={carteggio.id}
+                  phase={sendCheck.phase}
+                  minLength={sendCheck.minLength}
+                  maxLength={sendCheck.maxLength}
+                />
+              ) : (
+                <p className="font-serif italic text-center text-ink-soft leading-relaxed">
+                  {sendCheck.reason}
+                </p>
+              )}
+            </div>
+          )}
+
+          {!carteggioAttivo && (
+            <div className="border-t border-rule pt-8 text-center">
+              <p className="font-serif italic text-ink-soft">
+                Questo carteggio è archiviato. Le lettere restano leggibili,
+                ma non si possono più scambiare messaggi.
               </p>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Trust & safety: blocca + segnala utente */}
+          {altro && carteggioAttivo && (
+            <div className="mt-16 pt-8 border-t border-rule">
+              <p className="font-sans text-xs tracking-widest uppercase text-ink-faded text-center mb-4">
+                qualcosa non va?
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link
+                  href={`/segnala?tipo=utente&id=${altroId}`}
+                  className="text-center font-sans text-xs tracking-widest uppercase text-ink-faded border border-rule rounded-full px-5 py-2 hover:border-accent hover:text-accent transition-colors"
+                >
+                  segnala {altro.nome_battesimo}
+                </Link>
+                <form action={bloccaUtente}>
+                  <input type="hidden" name="carteggioId" value={carteggio.id} />
+                  <button
+                    type="submit"
+                    className="w-full font-sans text-xs tracking-widest uppercase text-paper bg-ink rounded-full px-5 py-2 hover:bg-accent transition-colors"
+                  >
+                    blocca {altro.nome_battesimo}
+                  </button>
+                </form>
+              </div>
+              <p className="font-serif italic text-xs text-ink-faded text-center mt-4 leading-relaxed">
+                Il blocco archivia il carteggio e nasconde i suoi pezzi dal tuo feed.
+                <br />
+                La segnalazione la legge l'amministrazione.
+              </p>
+            </div>
+          )}
         </div>
       </main>
     </div>

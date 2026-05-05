@@ -48,7 +48,7 @@ export default async function FeedPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Nav active="feed" />
+      <Nav />
       <main className="flex-1 px-6 py-12 pb-32">
         <div className="max-w-xl mx-auto">
           <header className="text-center mb-12">
@@ -130,18 +130,26 @@ export default async function FeedPage() {
                       </p>
                     </div>
 
-                    {giaEcoato ? (
-                      <p className="mt-4 font-serif italic text-sm text-ink-faded">
-                        Hai già lasciato un eco a questo pezzo.
-                      </p>
-                    ) : (
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      {giaEcoato ? (
+                        <p className="font-serif italic text-sm text-ink-faded">
+                          Hai già lasciato un eco a questo pezzo.
+                        </p>
+                      ) : (
+                        <Link
+                          href={`/eco/${p.id}`}
+                          className="inline-block font-sans text-xs tracking-widest uppercase text-accent border border-accent rounded-full px-5 py-2 hover:bg-accent hover:text-paper transition-colors"
+                        >
+                          lascia un eco
+                        </Link>
+                      )}
                       <Link
-                        href={`/eco/${p.id}`}
-                        className="mt-4 inline-block font-sans text-xs tracking-widest uppercase text-accent border border-accent rounded-full px-5 py-2 hover:bg-accent hover:text-paper transition-colors"
+                        href={`/segnala?tipo=pezzo&id=${p.id}`}
+                        className="font-sans text-[10px] tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
                       >
-                        lascia un eco
+                        segnala
                       </Link>
-                    )}
+                    </div>
                   </article>
                 );
               })}

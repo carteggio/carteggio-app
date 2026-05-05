@@ -8,6 +8,7 @@ import {
   ECO_TESTO_MAX,
 } from "@/lib/eco";
 import { contaEchiOggi } from "@/lib/eco-server";
+import { checkContent } from "@/lib/moderazione";
 
 type State = { error: string | null };
 
@@ -37,6 +38,12 @@ export async function saveEco(
     };
   }
 
+  // Moderazione
+  const mod = checkContent(trimmed);
+  if (!mod.ok) {
+    return { error: mod.reason };
+  }
+
   const supabase = createClient();
   const {
     data: { user },
@@ -49,7 +56,7 @@ export async function saveEco(
     .eq("id", pezzoId)
     .maybeSingle();
 
-  if (!pezzo) return { error: "Pezzo non trovato." };
+  if (!pezzo) return { error: "Pezzo non trovato o non più disponibile." };
   if (pezzo.stato !== "visibile") return { error: "Pezzo non disponibile." };
   if (pezzo.autore_id === user.id) {
     return { error: "Non puoi lasciare un eco a un tuo pezzo." };
@@ -80,6 +87,9 @@ export async function saveEco(
   });
 
   if (insertError) {
+    if (insertError.message.includes("row-level security")) {
+      return { error: "Non puoi inviare echi adesso." };
+    }
     return { error: insertError.message };
   }
 

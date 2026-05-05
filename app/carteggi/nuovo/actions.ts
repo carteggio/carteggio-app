@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MESSAGGIO_MIN_SLOW, MESSAGGIO_MAX_SLOW } from "@/lib/carteggio";
+import { checkContent } from "@/lib/moderazione";
 
 type State = { error: string | null };
 
@@ -32,13 +33,18 @@ export async function apriCarteggio(
     };
   }
 
+  // Moderazione
+  const mod = checkContent(trimmed);
+  if (!mod.ok) {
+    return { error: mod.reason };
+  }
+
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Carica eco con join al pezzo
   const { data: eco } = await supabase
     .from("echi")
     .select("id, mittente_id, stato, pezzo:pezzi!pezzo_id(id, autore_id)")
@@ -58,7 +64,6 @@ export async function apriCarteggio(
     return { error: "Questo eco è già stato gestito." };
   }
 
-  // Carteggio già esistente?
   const { data: existing } = await supabase
     .from("carteggi")
     .select("id")
@@ -69,7 +74,6 @@ export async function apriCarteggio(
     redirect(`/carteggi/${existing.id}`);
   }
 
-  // Crea carteggio
   const { data: carteggio, error: cErr } = await supabase
     .from("carteggi")
     .insert({
@@ -84,7 +88,6 @@ export async function apriCarteggio(
     return { error: cErr?.message ?? "Errore creando il carteggio." };
   }
 
-  // Inserisci primo messaggio
   const { error: mErr } = await supabase.from("messaggi").insert({
     carteggio_id: carteggio.id,
     mittente_id: user.id,
@@ -96,10 +99,8 @@ export async function apriCarteggio(
     return { error: mErr.message };
   }
 
-  // Update eco state
   await supabase.from("echi").update({ stato: "risposto" }).eq("id", eco.id);
 
-  // Update carteggio ultimo_messaggio_at
   await supabase
     .from("carteggi")
     .update({ ultimo_messaggio_at: new Date().toISOString() })
