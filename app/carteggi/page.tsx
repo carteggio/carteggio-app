@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { markEchiAsLetti } from "@/lib/unread-server";
 import { FORMATO_LABEL, type FormatoPezzo } from "@/lib/formati";
 import { formatRelativeDate } from "@/lib/date";
 import Nav from "@/app/components/nav";
@@ -72,6 +73,11 @@ export default async function CarteggiPage() {
     .order("ultimo_messaggio_at", { ascending: false, nullsFirst: false });
 
   const carteggi = (carteggiRaw ?? []) as unknown as CarteggioRecord[];
+
+  // Marca tutti gli echi correnti come letti — l'utente sta visitando la
+  // sua inbox, quindi ha "visto" quello che c'è. Il badge si azzera.
+  // Eventuali nuovi echi che arrivano dopo torneranno a contare.
+  await markEchiAsLetti(user.id);
 
   return (
     <div className="min-h-screen flex flex-col">
