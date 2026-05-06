@@ -6,6 +6,7 @@ import { MESSAGGIO_MIN_SLOW, MESSAGGIO_MAX_SLOW } from "@/lib/carteggio";
 import { checkContent } from "@/lib/moderazione";
 import { inviaPushAUtente } from "@/lib/push-server";
 import { getUnreadEchiCount } from "@/lib/unread-server";
+import { checkRateLimit, LIMITS } from "@/lib/rate-limit";
 
 type State = { error: string | null };
 
@@ -41,6 +42,20 @@ export async function apriCarteggio(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Rate limit: max 5 carteggi aperti/ora per utente.
+  const rl = await checkRateLimit(
+    "apri-carteggio",
+    user.id,
+    LIMITS.apriCarteggio.limit,
+    LIMITS.apriCarteggio.windowSeconds
+  );
+  if (!rl.ok) {
+    const minuti = Math.ceil((rl.retryAfterSeconds ?? 3600) / 60);
+    return {
+      error: `Stai aprendo troppi carteggi. Riprova tra circa ${minuti} minuti.`,
+    };
+  }
 
   const { data: eco } = await supabase
     .from("echi")

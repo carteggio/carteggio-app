@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit, LIMITS } from "@/lib/rate-limit";
 
 type State = { error: string | null };
 
@@ -45,6 +46,20 @@ export async function saveSegnalazione(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Rate limit anti abuso del bottone segnala (max 10/ora per utente).
+  const rl = await checkRateLimit(
+    "save-segnalazione",
+    user.id,
+    LIMITS.saveSegnalazione.limit,
+    LIMITS.saveSegnalazione.windowSeconds
+  );
+  if (!rl.ok) {
+    const minuti = Math.ceil((rl.retryAfterSeconds ?? 3600) / 60);
+    return {
+      error: `Hai inviato molte segnalazioni. Riprova tra circa ${minuti} minuti.`,
+    };
+  }
 
   const motivazioneStr =
     typeof motivazione === "string" ? motivazione.trim() : "";

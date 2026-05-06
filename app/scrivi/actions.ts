@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { findFormato, countWords, type FormatoPezzo } from "@/lib/formati";
 import { checkContent } from "@/lib/moderazione";
+import { checkRateLimit, LIMITS } from "@/lib/rate-limit";
 
 type State = { error: string | null };
 
@@ -60,6 +61,20 @@ export async function savePezzo(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Rate limit anti spam: max 5 pezzi/ora per utente.
+  const rl = await checkRateLimit(
+    "save-pezzo",
+    user.id,
+    LIMITS.savePezzo.limit,
+    LIMITS.savePezzo.windowSeconds
+  );
+  if (!rl.ok) {
+    const minuti = Math.ceil((rl.retryAfterSeconds ?? 3600) / 60);
+    return {
+      error: `Stai pubblicando troppo in fretta. Riprova tra circa ${minuti} minuti.`,
+    };
+  }
 
   const { count } = await supabase
     .from("pezzi")

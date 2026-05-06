@@ -11,6 +11,7 @@ import { contaEchiOggi } from "@/lib/eco-server";
 import { checkContent } from "@/lib/moderazione";
 import { inviaPushAUtente } from "@/lib/push-server";
 import { getUnreadEchiCount } from "@/lib/unread-server";
+import { checkRateLimit, LIMITS } from "@/lib/rate-limit";
 
 type State = { error: string | null };
 
@@ -46,6 +47,20 @@ export async function saveEco(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Rate limit anti spam: max 15 echi/ora (sopra il limite giornaliero esistente).
+  const rl = await checkRateLimit(
+    "save-eco",
+    user.id,
+    LIMITS.saveEco.limit,
+    LIMITS.saveEco.windowSeconds
+  );
+  if (!rl.ok) {
+    const minuti = Math.ceil((rl.retryAfterSeconds ?? 3600) / 60);
+    return {
+      error: `Stai inviando echi troppo in fretta. Riprova tra circa ${minuti} minuti.`,
+    };
+  }
 
   const { data: pezzo } = await supabase
     .from("pezzi")

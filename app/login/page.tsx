@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import Script from "next/script";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getTurnstileSiteKey } from "@/lib/turnstile";
 import { sendOtp } from "./actions";
 
 export default async function LoginPage({
@@ -17,8 +19,18 @@ export default async function LoginPage({
     redirect("/benvenuto");
   }
 
+  const turnstileSiteKey = getTurnstileSiteKey();
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
+      {turnstileSiteKey && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          strategy="afterInteractive"
+          async
+          defer
+        />
+      )}
       <div className="max-w-sm w-full">
         <div className="text-center mb-12">
           <Link href="/" className="font-serif text-4xl font-medium hover:no-underline">
@@ -46,6 +58,15 @@ export default async function LoginPage({
               className="w-full bg-paper-deep border border-rule rounded-lg px-4 py-3 text-ink font-sans focus:outline-none focus:border-accent transition-colors"
             />
           </div>
+
+          {turnstileSiteKey && (
+            <div
+              className="cf-turnstile flex justify-center"
+              data-sitekey={turnstileSiteKey}
+              data-theme="light"
+              data-size="flexible"
+            />
+          )}
 
           {searchParams.error && (
             <p className="font-serif italic text-sm text-accent">{searchParams.error}</p>
