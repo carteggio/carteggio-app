@@ -56,25 +56,29 @@ export default async function CarteggioPage({
     notFound();
   }
 
-  const { data: ecoOrigine } = await supabase
-    .from("echi")
-    .select("id, testo, mittente_id")
-    .eq("id", carteggio.eco_origine_id)
-    .maybeSingle();
+  // Le tre query secondarie (eco di origine, messaggi, mark letti) sono
+  // indipendenti l'una dall'altra: lanciate in parallelo per ridurre la
+  // latenza totale della pagina.
+  const [ecoOrigineRes, messaggiRes] = await Promise.all([
+    supabase
+      .from("echi")
+      .select("id, testo, mittente_id")
+      .eq("id", carteggio.eco_origine_id)
+      .maybeSingle(),
+    supabase
+      .from("messaggi")
+      .select(
+        "id, mittente_id, tipo, contenuto_testo, contenuto_audio_url, created_at"
+      )
+      .eq("carteggio_id", params.id)
+      .order("created_at", { ascending: true }),
+    // L'utente sta leggendo il carteggio: marca i messaggi dell'altra persona
+    // come letti, così il badge nel bottom nav e sull'icona PWA si azzerano.
+    markMessaggiAsLetti(user.id, params.id),
+  ]);
 
-  const { data: messaggiRaw } = await supabase
-    .from("messaggi")
-    .select(
-      "id, mittente_id, tipo, contenuto_testo, contenuto_audio_url, created_at"
-    )
-    .eq("carteggio_id", params.id)
-    .order("created_at", { ascending: true });
-
-  const messaggi = (messaggiRaw ?? []) as Messaggio[];
-
-  // L'utente sta leggendo il carteggio: marca i messaggi dell'altra persona
-  // come letti, così il badge nel bottom nav e sull'icona PWA si azzerano.
-  await markMessaggiAsLetti(user.id, params.id);
+  const ecoOrigine = ecoOrigineRes.data;
+  const messaggi = (messaggiRes.data ?? []) as Messaggio[];
 
   const a = carteggio.a as unknown as {
     nome_battesimo: string;

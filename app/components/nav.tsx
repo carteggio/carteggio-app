@@ -105,7 +105,11 @@ export default function Nav(props: NavProps = {}) {
 
     async function fetchUnread() {
       try {
-        const res = await fetch("/api/unread");
+        // cache: no-store + cache-buster query: il count deve sempre essere fresco,
+        // soprattutto dopo che apri un carteggio e i messaggi vengono marcati letti.
+        const res = await fetch(`/api/unread?t=${Date.now()}`, {
+          cache: "no-store",
+        });
         const data = await res.json();
         if (!cancelled) setUnread(typeof data.count === "number" ? data.count : 0);
       } catch {
@@ -116,11 +120,16 @@ export default function Nav(props: NavProps = {}) {
     fetchUnread();
 
     const onFocus = () => fetchUnread();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchUnread();
+    };
     window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       cancelled = true;
       window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [pathname]);
 

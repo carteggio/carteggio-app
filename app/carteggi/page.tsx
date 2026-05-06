@@ -44,39 +44,43 @@ export default async function CarteggiPage() {
 
   const supabase = createClient();
 
-  const { data: echiRaw } = await supabase
-    .from("echi")
-    .select(
+  // Le tre query principali (echi, carteggi, mark echi letti) sono indipendenti:
+  // lanciate in parallelo per dimezzare la latenza della pagina.
+  const [echiRes, carteggiRes] = await Promise.all([
+    supabase
+      .from("echi")
+      .select(
+        `
+        id, testo, created_at, stato,
+        pezzo:pezzi!pezzo_id ( id, formato, contenuto_testo, autore_id ),
+        mittente:users!mittente_id ( nome_battesimo, fascia_eta )
       `
-      id, testo, created_at, stato,
-      pezzo:pezzi!pezzo_id ( id, formato, contenuto_testo, autore_id ),
-      mittente:users!mittente_id ( nome_battesimo, fascia_eta )
-    `
-    )
-    .eq("stato", "in_attesa")
-    .order("created_at", { ascending: false });
+      )
+      .eq("stato", "in_attesa")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("carteggi")
+      .select(
+        `
+        id, partecipante_a_id, partecipante_b_id, ultimo_messaggio_at, created_at, stato,
+        partecipante_a:users!partecipante_a_id ( nome_battesimo, fascia_eta ),
+        partecipante_b:users!partecipante_b_id ( nome_battesimo, fascia_eta )
+      `
+      )
+      .eq("stato", "attivo")
+      .order("ultimo_messaggio_at", { ascending: false, nullsFirst: false }),
+    // L'utente sta visitando l'inbox: marca gli echi visti come letti.
+    markEchiAsLetti(user.id),
+  ]);
 
-  const echiInAttesa = ((echiRaw ?? []) as unknown as (EcoInAttesa & {
+  const echiInAttesa = ((echiRes.data ?? []) as unknown as (EcoInAttesa & {
     pezzo: { autore_id: string } | null;
   })[]).filter((e) => e.pezzo && e.pezzo.autore_id === user.id);
 
-  const { data: carteggiRaw } = await supabase
-    .from("carteggi")
-    .select(
-      `
-      id, partecipante_a_id, partecipante_b_id, ultimo_messaggio_at, created_at, stato,
-      partecipante_a:users!partecipante_a_id ( nome_battesimo, fascia_eta ),
-      partecipante_b:users!partecipante_b_id ( nome_battesimo, fascia_eta )
-    `
-    )
-    .eq("stato", "attivo")
-    .order("ultimo_messaggio_at", { ascending: false, nullsFirst: false });
-
-  const carteggi = (carteggiRaw ?? []) as unknown as CarteggioRecord[];
+  const carteggi = (carteggiRes.data ?? []) as unknown as CarteggioRecord[];
 
   // Per ogni carteggio, conta i messaggi non letti mandati dall'altra persona.
-  // Serve per evidenziare in rosso/accent le conversazioni con qualcosa di nuovo
-  // da leggere.
+  // Serve per evidenziare in rosso/accent le conversazioni con qualcosa di nuovo.
   const unreadByCarteggio: Record<string, number> = {};
   if (carteggi.length > 0) {
     const carteggioIds = carteggi.map((c) => c.id);
@@ -92,11 +96,6 @@ export default async function CarteggiPage() {
         (unreadByCarteggio[m.carteggio_id] ?? 0) + 1;
     }
   }
-
-  // Marca tutti gli echi correnti come letti — l'utente sta visitando la
-  // sua inbox, quindi ha "visto" quello che c'è. Il badge si azzera.
-  // Eventuali nuovi echi che arrivano dopo torneranno a contare.
-  await markEchiAsLetti(user.id);
 
   return (
     <div className="min-h-screen flex flex-col">
