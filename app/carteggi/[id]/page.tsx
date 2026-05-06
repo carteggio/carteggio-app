@@ -11,7 +11,8 @@ import Nav from "@/app/components/nav";
 import RefreshUnread from "@/app/components/refresh-unread";
 import ScrollToBottom from "@/app/components/scroll-to-bottom";
 import MessaggioForm from "./messaggio-form";
-import { sbloccaFoto, bloccaUtente } from "./actions";
+import { sbloccaFoto } from "./actions";
+import CarteggioMenu from "./menu";
 
 export const dynamic = "force-dynamic";
 
@@ -164,6 +165,14 @@ export default async function CarteggioPage({
                   : "chat libera"}
             </p>
           </div>
+          {/* Menu kebab: segnala / blocca, solo se carteggio attivo */}
+          {altro && carteggioAttivo && (
+            <CarteggioMenu
+              carteggioId={carteggio.id}
+              altroId={altroId}
+              altroNome={altro.nome_battesimo}
+            />
+          )}
         </div>
       </header>
       <main className="flex-1 px-6 py-8 pb-32">
@@ -321,36 +330,7 @@ export default async function CarteggioPage({
             </div>
           )}
 
-          {/* Trust & safety: blocca + segnala utente */}
-          {altro && carteggioAttivo && (
-            <div className="mt-16 pt-8 border-t border-rule">
-              <p className="font-sans text-xs tracking-widest uppercase text-ink-faded text-center mb-4">
-                qualcosa non va?
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link
-                  href={`/segnala?tipo=utente&id=${altroId}`}
-                  className="text-center font-sans text-xs tracking-widest uppercase text-ink-faded border border-rule rounded-full px-5 py-2 hover:border-accent hover:text-accent transition-colors"
-                >
-                  segnala {altro.nome_battesimo}
-                </Link>
-                <form action={bloccaUtente}>
-                  <input type="hidden" name="carteggioId" value={carteggio.id} />
-                  <button
-                    type="submit"
-                    className="w-full font-sans text-xs tracking-widest uppercase text-paper bg-ink rounded-full px-5 py-2 hover:bg-accent transition-colors"
-                  >
-                    blocca {altro.nome_battesimo}
-                  </button>
-                </form>
-              </div>
-              <p className="font-serif italic text-xs text-ink-faded text-center mt-4 leading-relaxed">
-                Il blocco archivia il carteggio e nasconde i suoi pezzi dal tuo feed.
-                <br />
-                La segnalazione la legge l'amministrazione.
-              </p>
-            </div>
-          )}
+          {/* Segnala/blocca sono ora nel menu kebab in alto a destra */}
         </div>
       </main>
     </div>
