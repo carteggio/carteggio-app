@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { canSendMessage } from "@/lib/carteggio-server";
+import { markMessaggiAsLetti } from "@/lib/unread-server";
 import { SLOW_PHASE_MESSAGGI } from "@/lib/carteggio";
 import { PHOTO_UNLOCK_AFTER_MESSAGES } from "@/lib/foto";
 import { formatRelativeDate } from "@/lib/date";
@@ -70,6 +71,10 @@ export default async function CarteggioPage({
     .order("created_at", { ascending: true });
 
   const messaggi = (messaggiRaw ?? []) as Messaggio[];
+
+  // L'utente sta leggendo il carteggio: marca i messaggi dell'altra persona
+  // come letti, così il badge nel bottom nav e sull'icona PWA si azzerano.
+  await markMessaggiAsLetti(user.id, params.id);
 
   const a = carteggio.a as unknown as {
     nome_battesimo: string;
