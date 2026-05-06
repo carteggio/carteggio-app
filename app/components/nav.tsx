@@ -90,9 +90,12 @@ function detectActive(pathname: string): NavSection | undefined {
 // Nota: il prop `active` è opzionale e ignorato (mantenuto per compatibilità
 // con pagine vecchie che ancora lo passano). L'highlight è sempre derivato
 // da usePathname.
-type NavProps = { active?: NavSection };
+// Il prop `hideTopHeader` permette ad alcune pagine (es. carteggio singolo)
+// di mostrare un proprio header sticky al posto del logo.
+type NavProps = { active?: NavSection; hideTopHeader?: boolean };
 
-export default function Nav(_props: NavProps = {}) {
+export default function Nav(props: NavProps = {}) {
+  const hideTopHeader = props.hideTopHeader ?? false;
   const pathname = usePathname();
   const active = detectActive(pathname);
   const [unread, setUnread] = useState(0);
@@ -123,20 +126,28 @@ export default function Nav(_props: NavProps = {}) {
 
   return (
     <>
-      <header className="sticky top-0 z-10 border-b border-rule bg-paper/95 backdrop-blur-sm">
-        <div className="max-w-xl mx-auto px-6 py-3 text-center">
-          <Link
-            href="/feed"
-            className="font-serif text-xl font-medium leading-none hover:no-underline"
-          >
-            Cartegg<span className="text-accent italic">i</span>o
-          </Link>
-        </div>
-      </header>
+      {!hideTopHeader && (
+        <header className="sticky top-0 z-10 border-b border-rule bg-paper/95 backdrop-blur-sm">
+          <div className="max-w-xl mx-auto px-6 py-3 text-center">
+            <Link
+              href="/feed"
+              className="font-serif text-xl font-medium leading-none hover:no-underline"
+            >
+              Cartegg<span className="text-accent italic">i</span>o
+            </Link>
+          </div>
+        </header>
+      )}
 
       <nav
         className="fixed bottom-0 left-0 right-0 z-10 border-t border-rule bg-paper/95 backdrop-blur-sm"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        style={{
+          // Su iPhone con home indicator: oltre alla safe-area-inset-bottom
+          // aggiungiamo 1rem (~16px) di respiro sopra, simile al pattern di
+          // WhatsApp, così le icone non sono attaccate alla barra di sistema.
+          paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)",
+          paddingTop: "0.25rem",
+        }}
       >
         <div className="max-w-xl mx-auto px-2 py-2 flex justify-around items-center">
           {TABS.map((tab) => {

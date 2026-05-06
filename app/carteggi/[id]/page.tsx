@@ -125,36 +125,38 @@ export default async function CarteggioPage({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Nav />
-      <main className="flex-1 px-6 py-8 pb-32">
-        <div className="max-w-xl mx-auto">
+      <Nav hideTopHeader />
+      {/* Header sticky della chat: back arrow sempre visibile + nome dell'altra persona */}
+      <header className="sticky top-0 z-10 border-b border-rule bg-paper/95 backdrop-blur-sm">
+        <div className="max-w-xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link
             href="/carteggi"
-            className="font-sans text-xs tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
+            aria-label="torna ai carteggi"
+            className="text-2xl text-ink-faded hover:text-accent transition-colors leading-none"
           >
-            ← carteggi
+            ←
           </Link>
-
-          <header className="text-center my-10">
-            <p className="font-sans text-xs tracking-[0.3em] uppercase text-ink-faded mb-2">
-              carteggio con
-            </p>
-            <h1 className="font-serif text-4xl md:text-5xl font-medium leading-none">
+          <div className="flex-1 min-w-0">
+            <h1 className="font-serif text-xl font-medium leading-tight truncate">
               {altro?.nome_battesimo ?? "anonimo"}
               {altro?.fascia_eta && (
-                <span className="font-serif italic text-xl text-ink-faded ml-3">
+                <span className="font-serif italic text-base text-ink-faded ml-2">
                   {altro.fascia_eta}
                 </span>
               )}
             </h1>
-            <p className="font-sans text-xs tracking-widest uppercase text-ink-faded mt-4">
+            <p className="font-sans text-[10px] tracking-widest uppercase text-ink-faded">
               {!carteggioAttivo
-                ? `archiviato`
+                ? "archiviato"
                 : sendCheck.phase === "slow"
                   ? `lettera ${numMessaggi} di ${SLOW_PHASE_MESSAGGI}`
                   : "chat libera"}
             </p>
-          </header>
+          </div>
+        </div>
+      </header>
+      <main className="flex-1 px-6 py-8 pb-32">
+        <div className="max-w-xl mx-auto">
 
           {photoUnlockAvailable && carteggioAttivo && (
             <section className="mb-10">

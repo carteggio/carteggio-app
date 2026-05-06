@@ -74,6 +74,25 @@ export default async function CarteggiPage() {
 
   const carteggi = (carteggiRaw ?? []) as unknown as CarteggioRecord[];
 
+  // Per ogni carteggio, conta i messaggi non letti mandati dall'altra persona.
+  // Serve per evidenziare in rosso/accent le conversazioni con qualcosa di nuovo
+  // da leggere.
+  const unreadByCarteggio: Record<string, number> = {};
+  if (carteggi.length > 0) {
+    const carteggioIds = carteggi.map((c) => c.id);
+    const { data: unreadMsgs } = await supabase
+      .from("messaggi")
+      .select("carteggio_id")
+      .in("carteggio_id", carteggioIds)
+      .neq("mittente_id", user.id)
+      .is("letto_at", null);
+
+    for (const m of (unreadMsgs ?? []) as { carteggio_id: string }[]) {
+      unreadByCarteggio[m.carteggio_id] =
+        (unreadByCarteggio[m.carteggio_id] ?? 0) + 1;
+    }
+  }
+
   // Marca tutti gli echi correnti come letti — l'utente sta visitando la
   // sua inbox, quindi ha "visto" quello che c'è. Il badge si azzera.
   // Eventuali nuovi echi che arrivano dopo torneranno a contare.
@@ -196,22 +215,46 @@ export default async function CarteggiPage() {
                     c.partecipante_a_id === user.id
                       ? c.partecipante_b
                       : c.partecipante_a;
+                  const unread = unreadByCarteggio[c.id] ?? 0;
+                  const hasUnread = unread > 0;
                   return (
                     <Link
                       key={c.id}
                       href={`/carteggi/${c.id}`}
-                      className="block p-5 border border-rule rounded-lg hover:border-accent transition-colors"
+                      className={`block p-5 border-2 rounded-lg transition-colors ${
+                        hasUnread
+                          ? "border-accent bg-accent/5"
+                          : "border-rule hover:border-accent"
+                      }`}
                     >
-                      <div className="flex items-baseline justify-between">
-                        <h3 className="font-serif text-xl font-medium">
-                          {altro?.nome_battesimo ?? "anonimo"}
-                          {altro?.fascia_eta && (
-                            <span className="font-serif italic text-base text-ink-faded ml-2">
-                              {altro.fascia_eta}
+                      <div className="flex items-baseline justify-between gap-3">
+                        <h3
+                          className={`font-serif text-xl font-medium flex items-center gap-2 ${
+                            hasUnread ? "text-accent" : ""
+                          }`}
+                        >
+                          <span>
+                            {altro?.nome_battesimo ?? "anonimo"}
+                            {altro?.fascia_eta && (
+                              <span className="font-serif italic text-base text-ink-faded ml-2">
+                                {altro.fascia_eta}
+                              </span>
+                            )}
+                          </span>
+                          {hasUnread && (
+                            <span
+                              className="bg-accent text-paper text-[10px] font-sans font-semibold rounded-full min-w-[18px] h-[18px] px-1.5 leading-none flex items-center justify-center"
+                              aria-label={`${unread} non letti`}
+                            >
+                              {unread > 9 ? "9+" : unread}
                             </span>
                           )}
                         </h3>
-                        <span className="font-serif italic text-xs text-ink-faded">
+                        <span
+                          className={`font-serif italic text-xs ${
+                            hasUnread ? "text-accent" : "text-ink-faded"
+                          }`}
+                        >
                           {c.ultimo_messaggio_at
                             ? formatRelativeDate(c.ultimo_messaggio_at)
                             : formatRelativeDate(c.created_at)}
