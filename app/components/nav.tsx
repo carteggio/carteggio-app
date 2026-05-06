@@ -123,13 +123,20 @@ export default function Nav(props: NavProps = {}) {
     const onVisibility = () => {
       if (document.visibilityState === "visible") fetchUnread();
     };
+    // Evento custom: le pagine che marcano qualcosa come letto (es. apertura
+    // di un singolo carteggio) lo dispatchano dopo il mount via il componente
+    // <RefreshUnread />. Permette di rinfrescare il badge anche su iOS PWA
+    // dove il pathname change da solo non sempre triggera l'effetto.
+    const onUnreadChanged = () => fetchUnread();
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("unread-changed", onUnreadChanged);
 
     return () => {
       cancelled = true;
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("unread-changed", onUnreadChanged);
     };
   }, [pathname]);
 

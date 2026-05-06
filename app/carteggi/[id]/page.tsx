@@ -8,6 +8,7 @@ import { SLOW_PHASE_MESSAGGI } from "@/lib/carteggio";
 import { PHOTO_UNLOCK_AFTER_MESSAGES } from "@/lib/foto";
 import { formatRelativeDate } from "@/lib/date";
 import Nav from "@/app/components/nav";
+import RefreshUnread from "@/app/components/refresh-unread";
 import MessaggioForm from "./messaggio-form";
 import { sbloccaFoto, bloccaUtente } from "./actions";
 
@@ -130,6 +131,9 @@ export default async function CarteggioPage({
   return (
     <div className="min-h-screen flex flex-col">
       <Nav hideTopHeader />
+      {/* Forza il refresh del badge unread dopo che il server ha marcato i
+          messaggi come letti — il pathname change da solo su iOS PWA non basta */}
+      <RefreshUnread />
       {/* Header sticky della chat: back arrow sempre visibile + nome dell'altra persona */}
       <header className="sticky top-0 z-10 border-b border-rule bg-paper/95 backdrop-blur-sm">
         <div className="max-w-xl mx-auto px-4 py-3 flex items-center gap-3">
