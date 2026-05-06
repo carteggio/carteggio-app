@@ -42,10 +42,9 @@ export default function MessaggioForm({
   const [state, formAction] = useFormState(sendMessaggio, initialState);
   const [testo, setTesto] = useState("");
   const previousStateRef = useRef<State | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Quando l'invio ha successo (state.error null e state è cambiato dal
-  // render precedente), pulisce il textarea così l'utente può scrivere
-  // il prossimo messaggio senza cancellare a mano.
+  // Quando l'invio ha successo, pulisce il textarea e lo riporta a una riga.
   useEffect(() => {
     if (
       previousStateRef.current !== null &&
@@ -53,45 +52,63 @@ export default function MessaggioForm({
       state.error === null
     ) {
       setTesto("");
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
     }
     previousStateRef.current = state;
   }, [state]);
 
+  // Auto-grow del textarea: parte a una riga e si espande mentre scrivi.
+  function autoResize(el: HTMLTextAreaElement) {
+    el.style.height = "auto";
+    // Cap a circa 8 righe per non mangiare metà schermo
+    const max = 8 * 28; // ~28px per riga (text-lg + leading-relaxed)
+    el.style.height = `${Math.min(el.scrollHeight, max)}px`;
+  }
+
   const len = testo.length;
   const isValid = len >= minLength && len <= maxLength;
+  // Counter visibile SOLO in fase slow (dove c'è il minimo di 200 caratteri).
+  // In fase libera niente count, niente limite mostrato.
+  const showCounter = phase === "slow";
   const counterColor =
     len > maxLength
       ? "text-accent"
       : len < minLength
         ? "text-ink-faded"
-        : len > maxLength * 0.9
-          ? "text-accent-soft"
-          : "text-accent";
+        : "text-accent";
 
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="carteggioId" value={carteggioId} />
 
       <textarea
+        ref={textareaRef}
         name="messaggio"
         value={testo}
-        onChange={(e) => setTesto(e.target.value)}
+        onChange={(e) => {
+          setTesto(e.target.value);
+          autoResize(e.currentTarget);
+        }}
         required
-        rows={phase === "slow" ? 8 : 4}
+        rows={1}
         maxLength={maxLength + 50}
         placeholder={
           phase === "slow"
             ? "Continua il carteggio. Almeno duecento caratteri."
             : "Scrivi…"
         }
-        className="w-full bg-paper-deep border border-rule rounded-lg px-4 py-3 text-ink font-serif text-lg leading-relaxed focus:outline-none focus:border-accent transition-colors resize-none"
+        className="w-full bg-paper-deep border border-rule rounded-lg px-4 py-3 text-ink font-serif text-lg leading-relaxed focus:outline-none focus:border-accent transition-colors resize-none overflow-y-auto"
       />
 
-      <p className={`text-center text-sm font-sans ${counterColor}`}>
-        {len < minLength
-          ? `${len} / ${minLength} caratteri (minimo)`
-          : `${len} / ${maxLength}`}
-      </p>
+      {showCounter && (
+        <p className={`text-center text-sm font-sans ${counterColor}`}>
+          {len < minLength
+            ? `${len} / ${minLength} caratteri (minimo)`
+            : `${len} / ${maxLength}`}
+        </p>
+      )}
 
       {state.error && (
         <p className="font-serif italic text-sm text-accent text-center">

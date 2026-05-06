@@ -8,7 +8,9 @@ export const SLOW_PHASE_MESSAGGI = 3;
 export const MESSAGGIO_MIN_SLOW = 200;
 export const MESSAGGIO_MAX_SLOW = 2000;
 export const MESSAGGIO_MIN_FREE = 1;
-export const MESSAGGIO_MAX_FREE = 4000;
+// Limite alto, solo come safety contro paste accidentali enormi.
+// Non viene mostrato all'utente nella UI in fase free (counter nascosto).
+export const MESSAGGIO_MAX_FREE = 20000;
 
 export const TIMEOUT_RISPOSTA_GIORNI = 7;
 export const COOLDOWN_RISPOSTA_ORE = 24;

@@ -9,6 +9,7 @@ import { PHOTO_UNLOCK_AFTER_MESSAGES } from "@/lib/foto";
 import { formatRelativeDate } from "@/lib/date";
 import Nav from "@/app/components/nav";
 import RefreshUnread from "@/app/components/refresh-unread";
+import ScrollToBottom from "@/app/components/scroll-to-bottom";
 import MessaggioForm from "./messaggio-form";
 import { sbloccaFoto, bloccaUtente } from "./actions";
 
@@ -134,6 +135,8 @@ export default async function CarteggioPage({
       {/* Forza il refresh del badge unread dopo che il server ha marcato i
           messaggi come letti — il pathname change da solo su iOS PWA non basta */}
       <RefreshUnread />
+      {/* Apre la chat con la pagina già scrollata in fondo, come WhatsApp */}
+      <ScrollToBottom />
       {/* Header sticky della chat: back arrow sempre visibile + nome dell'altra persona */}
       <header className="sticky top-0 z-10 border-b border-rule bg-paper/95 backdrop-blur-sm">
         <div className="max-w-xl mx-auto px-4 py-3 flex items-center gap-3">
