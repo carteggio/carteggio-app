@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import InstallPwaButton from "@/app/components/install-pwa-button";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,9 @@ export default async function Home() {
     }
   }
 
-  // Landing pubblica: mostrato solo a chi non è autenticato
+  // Porta d'ingresso PWA: mostrata a chi non è autenticato.
+  // Il bottone primario "Installa" viene gestito client-side in base al browser.
+  // Il link "entra" è secondario, per chi è già registrato e vuole solo accedere.
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
       <div className="max-w-xl w-full text-center">
@@ -40,16 +43,17 @@ export default async function Home() {
           conoscersi per le parole, non per la foto
         </p>
         <div className="w-16 h-px bg-rule mx-auto mt-12" />
-        <p className="font-serif italic text-base text-ink-faded mt-12 leading-relaxed">
-          Stiamo costruendo qualcosa di piccolo e bello.
+        <p className="font-serif italic text-base text-ink-faded mt-12 leading-relaxed max-w-md mx-auto">
+          Un posto dove ci si conosce per quello che si pensa,
           <br />
-          Quando sarà il momento, ti scriveremo.
+          prima che per come si appare.
         </p>
 
-        <div className="mt-12">
+        <div className="mt-12 flex flex-col items-center gap-5">
+          <InstallPwaButton />
           <Link
             href="/login"
-            className="inline-block font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
+            className="font-sans text-xs tracking-[0.3em] uppercase text-ink-soft hover:text-accent transition-colors"
           >
             entra
           </Link>
