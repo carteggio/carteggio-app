@@ -17,7 +17,7 @@ Vedi `.env.example`. Tutte le chiavi sono configurate come variabili d'ambiente 
 
 ## Sviluppo
 
-Il codice viene scritto da Claude e pubblicato su questo repository. Il deploy a `carteggio-app.vercel.app` è automatico ad ogni push su `main`.
+Il codice viene scritto da Claude e pubblicato su questo repository. Il deploy a [carteggio.app](https://carteggio.app) è automatico ad ogni push su `main` (hosting Vercel).
 
 Per lavoro locale (più avanti):
 

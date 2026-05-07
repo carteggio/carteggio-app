@@ -19,6 +19,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://carteggio.app"),
   title: "Carteggio",
   description:
     "Conoscersi per le parole, non per la foto. In arrivo a Brescia e Bergamo.",
@@ -37,6 +38,8 @@ export const metadata: Metadata = {
     description: "Conoscersi per le parole, non per la foto.",
     type: "website",
     locale: "it_IT",
+    url: "https://carteggio.app",
+    siteName: "Carteggio",
   },
 };
 
