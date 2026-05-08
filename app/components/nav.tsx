@@ -155,15 +155,12 @@ export default function Nav(props: NavProps = {}) {
         </header>
       )}
 
+      {/* Padding-bottom: oltre alla safe-area-inset-bottom (home indicator
+          iPhone) aggiungiamo 1rem di respiro, simile al pattern di WhatsApp.
+          Espresso come arbitrary value Tailwind così niente inline style
+          (CSP strict). Niente spazi nel calc() per non confondere Tailwind. */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-10 border-t border-rule bg-paper/95 backdrop-blur-sm"
-        style={{
-          // Su iPhone con home indicator: oltre alla safe-area-inset-bottom
-          // aggiungiamo 1rem (~16px) di respiro sopra, simile al pattern di
-          // WhatsApp, così le icone non sono attaccate alla barra di sistema.
-          paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)",
-          paddingTop: "0.25rem",
-        }}
+        className="fixed bottom-0 left-0 right-0 z-10 border-t border-rule bg-paper/95 backdrop-blur-sm pt-1 pb-[calc(env(safe-area-inset-bottom)+1rem)]"
       >
         <div className="max-w-xl mx-auto px-2 py-2 flex justify-around items-center">
           {TABS.map((tab) => {
