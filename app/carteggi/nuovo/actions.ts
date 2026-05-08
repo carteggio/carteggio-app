@@ -91,16 +91,26 @@ export async function apriCarteggio(
   //    eco)? Vincolo di prodotto: max 1 carteggio attivo per coppia. Se sì,
   //    marchiamo l'eco corrente come "risposto" (la persona ha preso atto) e
   //    redirigiamo al carteggio già esistente, dove la conversazione continua.
-  const { data: existingActive } = await supabase
-    .from("carteggi")
-    .select("id")
-    .eq("stato", "attivo")
-    .or(
-      `and(partecipante_a_id.eq.${user.id},partecipante_b_id.eq.${eco.mittente_id}),` +
-        `and(partecipante_a_id.eq.${eco.mittente_id},partecipante_b_id.eq.${user.id})`
-    )
-    .maybeSingle();
+  //    NB: due query separate invece di .or() con and() annidati, per evitare
+  //    ambiguità della sintassi PostgREST.
+  const [{ data: carteggioAB }, { data: carteggioBA }] = await Promise.all([
+    supabase
+      .from("carteggi")
+      .select("id")
+      .eq("stato", "attivo")
+      .eq("partecipante_a_id", user.id)
+      .eq("partecipante_b_id", eco.mittente_id)
+      .maybeSingle(),
+    supabase
+      .from("carteggi")
+      .select("id")
+      .eq("stato", "attivo")
+      .eq("partecipante_a_id", eco.mittente_id)
+      .eq("partecipante_b_id", user.id)
+      .maybeSingle(),
+  ]);
 
+  const existingActive = carteggioAB ?? carteggioBA;
   if (existingActive) {
     await supabase.from("echi").update({ stato: "risposto" }).eq("id", eco.id);
     redirect(`/carteggi/${existingActive.id}`);

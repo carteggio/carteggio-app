@@ -67,7 +67,7 @@ export default async function NuovoCarteggioPage({
     );
   }
 
-  // Se esiste già un carteggio per questo eco, redirect lì
+  // Se esiste già un carteggio per questo eco, redirect lì.
   const { data: carteggioEsistente } = await supabase
     .from("carteggi")
     .select("id")
@@ -76,6 +76,35 @@ export default async function NuovoCarteggioPage({
 
   if (carteggioEsistente) {
     redirect(`/carteggi/${carteggioEsistente.id}`);
+  }
+
+  // Se esiste già un carteggio attivo tra le due persone (anche da un'altra
+  // eco), vincolo di prodotto: max 1 attivo per coppia. Marchiamo l'eco come
+  // "risposto" (la persona ha preso atto) e redirigiamo al carteggio esistente.
+  // NB: due query separate per evitare ambiguità della sintassi .or() di
+  // PostgREST con and() annidati.
+  const eco_mittente = (eco as { mittente_id: string }).mittente_id;
+  const [{ data: carteggioAB }, { data: carteggioBA }] = await Promise.all([
+    supabase
+      .from("carteggi")
+      .select("id")
+      .eq("stato", "attivo")
+      .eq("partecipante_a_id", user.id)
+      .eq("partecipante_b_id", eco_mittente)
+      .maybeSingle(),
+    supabase
+      .from("carteggi")
+      .select("id")
+      .eq("stato", "attivo")
+      .eq("partecipante_a_id", eco_mittente)
+      .eq("partecipante_b_id", user.id)
+      .maybeSingle(),
+  ]);
+
+  const carteggioAttivoCoppia = carteggioAB ?? carteggioBA;
+  if (carteggioAttivoCoppia) {
+    await supabase.from("echi").update({ stato: "risposto" }).eq("id", eco.id);
+    redirect(`/carteggi/${carteggioAttivoCoppia.id}`);
   }
 
   return (

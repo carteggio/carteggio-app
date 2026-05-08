@@ -54,7 +54,8 @@ export default async function CarteggiPage() {
         `
         id, testo, created_at, stato,
         pezzo:pezzi!pezzo_id ( id, formato, contenuto_testo, autore_id ),
-        mittente:users!mittente_id ( nome_battesimo, fascia_eta )
+        mittente:users!mittente_id ( nome_battesimo, fascia_eta ),
+        carteggi:carteggi!eco_origine_id ( id )
       `
       )
       .eq("stato", "in_attesa")
@@ -74,9 +75,17 @@ export default async function CarteggiPage() {
     markEchiAsLetti(user.id),
   ]);
 
+  // Filtra: solo echi sui MIEI pezzi (autore_id === user.id) e senza un
+  // carteggio già aperto. Il filtro 'no carteggio aperto' è defense-in-depth
+  // contro echi 'fantasma' che restano in stato='in_attesa' per qualunque
+  // motivo (race condition, fix RLS pre-migration-09, ecc.) — l'utente non
+  // deve mai vedere come pendente un eco già processato.
   const echiInAttesa = ((echiRes.data ?? []) as unknown as (EcoInAttesa & {
     pezzo: { autore_id: string } | null;
-  })[]).filter((e) => e.pezzo && e.pezzo.autore_id === user.id);
+    carteggi: { id: string }[];
+  })[])
+    .filter((e) => e.pezzo && e.pezzo.autore_id === user.id)
+    .filter((e) => !e.carteggi || e.carteggi.length === 0);
 
   const carteggi = (carteggiRes.data ?? []) as unknown as CarteggioRecord[];
 
