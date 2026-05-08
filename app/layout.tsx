@@ -30,6 +30,11 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Carteggio",
   },
+  // mobile-web-app-capable è il successore standardizzato di apple-mobile-web-app-capable.
+  // Apple e Google chiedono di tenerli entrambi finche' il transition non e' completo.
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
   icons: {
     icon: "/favicon.png",
     apple: "/apple-touch-icon.png",
