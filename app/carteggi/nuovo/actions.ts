@@ -76,6 +76,7 @@ export async function apriCarteggio(
     return { error: "Questo eco è già stato gestito." };
   }
 
+  // 1. C'è già un carteggio aperto su QUESTA stessa eco? Vai lì.
   const { data: existing } = await supabase
     .from("carteggi")
     .select("id")
@@ -84,6 +85,25 @@ export async function apriCarteggio(
 
   if (existing) {
     redirect(`/carteggi/${existing.id}`);
+  }
+
+  // 2. C'è già un carteggio attivo tra le stesse due persone (anche da un'altra
+  //    eco)? Vincolo di prodotto: max 1 carteggio attivo per coppia. Se sì,
+  //    marchiamo l'eco corrente come "risposto" (la persona ha preso atto) e
+  //    redirigiamo al carteggio già esistente, dove la conversazione continua.
+  const { data: existingActive } = await supabase
+    .from("carteggi")
+    .select("id")
+    .eq("stato", "attivo")
+    .or(
+      `and(partecipante_a_id.eq.${user.id},partecipante_b_id.eq.${eco.mittente_id}),` +
+        `and(partecipante_a_id.eq.${eco.mittente_id},partecipante_b_id.eq.${user.id})`
+    )
+    .maybeSingle();
+
+  if (existingActive) {
+    await supabase.from("echi").update({ stato: "risposto" }).eq("id", eco.id);
+    redirect(`/carteggi/${existingActive.id}`);
   }
 
   const { data: carteggio, error: cErr } = await supabase
