@@ -2,8 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { FASCE_ETA } from "@/lib/utenti";
 
-const FASCE_VALIDE = ["18-24", "25-30", "30-35", "35-40", "40+"] as const;
+const FASCE_VALIDE = FASCE_ETA;
 const CITTA_VALIDE = ["Brescia", "Bergamo"] as const;
 
 // Step 1: età 18+

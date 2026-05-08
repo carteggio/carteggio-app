@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { FASCE_ETA } from "@/lib/utenti";
 import { saveNomeFascia } from "../actions";
 
 function ProgressDots({ current }: { current: 1 | 2 | 3 | 4 }) {
@@ -21,7 +22,7 @@ function ProgressDots({ current }: { current: 1 | 2 | 3 | 4 }) {
   );
 }
 
-const FASCE = ["18-24", "25-30", "30-35", "35-40", "40+"] as const;
+const FASCE = FASCE_ETA;
 
 export default async function OnboardingNome({
   searchParams,
