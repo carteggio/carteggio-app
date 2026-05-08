@@ -2,13 +2,15 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
-import { FORMATO_LABEL, type FormatoPezzo } from "@/lib/formati";
-import { formatRelativeDate } from "@/lib/date";
 import Nav from "@/app/components/nav";
 import NotificationToggle from "@/app/components/notification-toggle";
 import InstallPrompt from "@/app/components/install-prompt";
+import PezziList from "./pezzi-list";
+import type { PezzoMin } from "./actions";
 
 export const dynamic = "force-dynamic";
+
+const PAGE_SIZE = 50;
 
 function pezziLabel(n: number): string {
   if (n === 0) return "ancora nessun pezzo";
@@ -22,14 +24,28 @@ export default async function ProfiloPage() {
   if (!profile) redirect("/onboarding/eta");
 
   const supabase = createClient();
-  const { data: pezzi } = await supabase
-    .from("pezzi")
-    .select("id, formato, contenuto_testo, created_at")
-    .eq("autore_id", user.id)
-    .eq("stato", "visibile")
-    .order("created_at", { ascending: false });
 
-  const numeroPezzi = pezzi?.length ?? 0;
+  // Prima pagina di pezzi (max PAGE_SIZE) + count totale.
+  // I pezzi successivi vengono caricati lato client da PezziList tramite la
+  // server action loadMorePezzi(offset), così il primo render della pagina
+  // resta veloce anche per utenti con centinaia di pezzi.
+  const [{ data: pezziPagina }, { count: numeroPezzi }] = await Promise.all([
+    supabase
+      .from("pezzi")
+      .select("id, formato, contenuto_testo, created_at")
+      .eq("autore_id", user.id)
+      .eq("stato", "visibile")
+      .order("created_at", { ascending: false })
+      .range(0, PAGE_SIZE - 1),
+    supabase
+      .from("pezzi")
+      .select("id", { count: "exact", head: true })
+      .eq("autore_id", user.id)
+      .eq("stato", "visibile"),
+  ]);
+
+  const initialPezzi = (pezziPagina ?? []) as PezzoMin[];
+  const totale = numeroPezzi ?? 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -75,49 +91,16 @@ export default async function ProfiloPage() {
             </div>
 
             <p className="font-sans text-xs tracking-widest uppercase text-ink-faded mt-8">
-              {pezziLabel(numeroPezzi)}
+              {pezziLabel(totale)}
             </p>
           </header>
 
-          {numeroPezzi === 0 ? (
+          {totale === 0 ? (
             <p className="font-serif italic text-center text-ink-faded">
               Non hai ancora pezzi.
             </p>
           ) : (
-            <div className="space-y-12">
-              {pezzi?.map((p) => (
-                <article
-                  key={p.id}
-                  className="border-b border-rule pb-12 last:border-b-0"
-                >
-                  <p className="font-sans text-xs tracking-widest uppercase text-ink-faded mb-4">
-                    {FORMATO_LABEL[p.formato as FormatoPezzo]}
-                  </p>
-                  <div
-                    className={`font-serif whitespace-pre-line leading-relaxed ${
-                      p.formato === "sei-parole"
-                        ? "text-2xl text-center"
-                        : p.formato === "ricordo" || p.formato === "luogo"
-                          ? "italic text-xl"
-                          : "text-xl"
-                    }`}
-                  >
-                    {p.contenuto_testo}
-                  </div>
-                  <div className="mt-4 flex items-baseline justify-between gap-3">
-                    <p className="font-serif italic text-sm text-ink-faded">
-                      {formatRelativeDate(p.created_at)}
-                    </p>
-                    <Link
-                      href={`/pezzo/${p.id}/modifica`}
-                      className="font-sans text-xs tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
-                    >
-                      modifica · elimina
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <PezziList initialPezzi={initialPezzi} totale={totale} />
           )}
 
           <div className="text-center mt-16">
