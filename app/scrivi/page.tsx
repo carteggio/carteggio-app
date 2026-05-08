@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { PEZZO_LIMITE_GIORNALIERO } from "@/lib/pezzi";
+import { contaPezziOggi } from "@/lib/pezzi-server";
 import ScriviForm from "./scrivi-form";
 import Nav from "@/app/components/nav";
 
@@ -12,28 +13,23 @@ export default async function ScriviPage() {
   if (!user) redirect("/login");
   if (!profile) redirect("/onboarding/eta");
 
-  const supabase = createClient();
-  const { count } = await supabase
-    .from("pezzi")
-    .select("id", { count: "exact", head: true })
-    .eq("autore_id", user.id)
-    .eq("stato", "visibile");
+  const pezziOggi = await contaPezziOggi(user.id);
 
-  const numeroPezzi = count ?? 0;
-
-  if (numeroPezzi >= 5) {
+  if (pezziOggi >= PEZZO_LIMITE_GIORNALIERO) {
     return (
       <div className="min-h-screen flex flex-col">
         <Nav active="scrivi" />
         <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 pb-32">
           <div className="max-w-md w-full text-center">
             <h1 className="font-serif text-3xl font-medium leading-tight">
-              Hai già cinque pezzi.
+              Hai scritto cinque pezzi oggi.
             </h1>
             <p className="font-serif italic text-lg text-ink-soft mt-4 leading-relaxed">
-              Per scriverne uno nuovo, prima eliminane uno dal tuo profilo.
+              Cinque al giorno è la nostra misura.
               <br />
-              Cinque è il numero giusto: oltre, ti diluisci.
+              Le parole hanno bisogno di riposare.
+              <br />
+              Domani potrai scriverne altre.
             </p>
             <Link
               href="/profilo"
@@ -51,7 +47,7 @@ export default async function ScriviPage() {
     <div className="min-h-screen flex flex-col">
       <Nav active="scrivi" />
       <div className="pb-32">
-        <ScriviForm pezziAttuali={numeroPezzi} />
+        <ScriviForm pezziOggi={pezziOggi} />
       </div>
     </div>
   );

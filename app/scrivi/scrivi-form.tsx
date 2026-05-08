@@ -5,6 +5,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
 import { savePezzo } from "./actions";
 import { FORMATI, findFormato, countWords } from "@/lib/formati";
+import { PEZZO_LIMITE_GIORNALIERO, PEZZO_LIMITE_MESSAGGIO } from "@/lib/pezzi";
 
 type State = { error: string | null };
 const initialState: State = { error: null };
@@ -22,7 +23,7 @@ function SubmitButton({ canSubmit }: { canSubmit: boolean }) {
   );
 }
 
-export default function ScriviForm({ pezziAttuali }: { pezziAttuali: number }) {
+export default function ScriviForm({ pezziOggi }: { pezziOggi: number }) {
   const [state, formAction] = useFormState(savePezzo, initialState);
   const [formato, setFormato] = useState<string>("");
   const [contenuto, setContenuto] = useState("");
@@ -60,13 +61,16 @@ export default function ScriviForm({ pezziAttuali }: { pezziAttuali: number }) {
 
         <header className="text-center my-12">
           <p className="font-sans text-xs tracking-[0.3em] uppercase text-ink-faded mb-4">
-            pezzo {pezziAttuali + 1} di 5
+            pezzo {pezziOggi + 1} di {PEZZO_LIMITE_GIORNALIERO} — oggi
           </p>
           <h1 className="font-serif text-4xl font-medium leading-tight">
             Un nuovo pezzo
           </h1>
           <p className="font-serif italic text-lg text-ink-soft mt-3">
             Scegli un formato. Poi scrivi.
+          </p>
+          <p className="font-serif italic text-sm text-ink-faded mt-6 leading-relaxed max-w-sm mx-auto">
+            {PEZZO_LIMITE_MESSAGGIO}
           </p>
         </header>
 

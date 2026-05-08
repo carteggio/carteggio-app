@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { findFormato, countWords, type FormatoPezzo } from "@/lib/formati";
 import { checkContent } from "@/lib/moderazione";
 import { checkRateLimit, LIMITS } from "@/lib/rate-limit";
+import { PEZZO_LIMITE_GIORNALIERO } from "@/lib/pezzi";
+import { contaPezziOggi } from "@/lib/pezzi-server";
 
 type State = { error: string | null };
 
@@ -76,16 +78,11 @@ export async function savePezzo(
     };
   }
 
-  const { count } = await supabase
-    .from("pezzi")
-    .select("id", { count: "exact", head: true })
-    .eq("autore_id", user.id)
-    .eq("stato", "visibile");
-
-  if ((count ?? 0) >= 5) {
+  const pezziOggi = await contaPezziOggi(user.id);
+  if (pezziOggi >= PEZZO_LIMITE_GIORNALIERO) {
     return {
       error:
-        "Hai già 5 pezzi attivi. Eliminane uno dal profilo prima di scriverne un altro.",
+        "Hai scritto cinque pezzi oggi. Domani potrai scriverne altri.",
     };
   }
 

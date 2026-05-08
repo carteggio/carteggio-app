@@ -121,18 +121,12 @@ export default async function ProfiloPage() {
           )}
 
           <div className="text-center mt-16">
-            {numeroPezzi < 5 ? (
-              <Link
-                href="/scrivi"
-                className="inline-block font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
-              >
-                + scrivi un nuovo pezzo
-              </Link>
-            ) : (
-              <p className="font-serif italic text-sm text-ink-faded">
-                Hai raggiunto il limite di 5 pezzi.
-              </p>
-            )}
+            <Link
+              href="/scrivi"
+              className="inline-block font-sans text-sm tracking-[0.25em] uppercase text-accent border border-accent rounded-full px-8 py-3 hover:bg-accent hover:text-paper transition-colors"
+            >
+              + scrivi un nuovo pezzo
+            </Link>
           </div>
 
           {/* Sezione impostazioni: install + notifiche */}
