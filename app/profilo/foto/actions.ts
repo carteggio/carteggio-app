@@ -9,6 +9,7 @@ import {
   FOTO_MIME_VALIDI,
   mimeToExt,
 } from "@/lib/foto";
+import { checkFoto } from "@/lib/moderazione-foto";
 
 type State = { error: string | null };
 
@@ -27,6 +28,13 @@ export async function uploadFoto(
 
   if (file.size > FOTO_MAX_BYTES) {
     return { error: "Foto troppo grande (massimo 5 MB)." };
+  }
+
+  // Moderazione automatica via Sightengine: nudo + simboli/gesti offensivi.
+  // Fail-open: se il servizio è giù o le credenziali mancano, l'upload prosegue.
+  const modCheck = await checkFoto(file);
+  if (!modCheck.ok) {
+    return { error: modCheck.reason };
   }
 
   const supabase = createClient();
