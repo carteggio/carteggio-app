@@ -70,6 +70,12 @@ const splashCss = `
   align-items: center;
   justify-content: center;
   transition: opacity 400ms ease-out;
+  opacity: 1;
+}
+/* Classe applicata via JS per scatenare il fade-out: niente inline style,
+   così la CSP strict 'style-src' senza 'unsafe-inline' non blocca nulla. */
+.carteggio-splash-fading {
+  opacity: 0;
 }
 .carteggio-splash-inner { text-align: center; }
 .carteggio-splash-title {
@@ -98,7 +104,7 @@ const splashScript = `
   function hideSplash() {
     var el = document.getElementById('carteggio-splash');
     if (!el) return;
-    el.style.opacity = '0';
+    el.classList.add('carteggio-splash-fading');
     setTimeout(function() {
       if (el && el.parentNode) el.parentNode.removeChild(el);
     }, 450);
