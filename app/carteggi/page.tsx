@@ -279,6 +279,18 @@ export default async function CarteggiPage() {
               </div>
             </section>
           )}
+
+          {/* Link discreto allo storico echi: visibile sempre, anche quando
+              la inbox è vuota (l'utente potrebbe averne mandati ma non
+              ricevuti, oppure tutti i suoi pendenti li ha gestiti). */}
+          <div className="text-center mt-16 pt-8 border-t border-rule">
+            <Link
+              href="/carteggi/echi"
+              className="font-sans text-xs tracking-widest uppercase text-ink-faded hover:text-accent transition-colors"
+            >
+              tutte le parole scambiate →
+            </Link>
+          </div>
         </div>
       </main>
     </div>
