@@ -5,6 +5,7 @@ import { getCurrentProfile } from "@/lib/auth/profile";
 import { markEchiAsLetti } from "@/lib/unread-server";
 import { FORMATO_LABEL, type FormatoPezzo } from "@/lib/formati";
 import { formatRelativeDate } from "@/lib/date";
+import { decifraMessaggio } from "@/lib/crypto-messaggi";
 import Nav from "@/app/components/nav";
 import ClearAppBadge from "@/app/components/clear-badge";
 import RefreshUnread from "@/app/components/refresh-unread";
@@ -85,7 +86,9 @@ export default async function CarteggiPage() {
     carteggi: { id: string }[];
   })[])
     .filter((e) => e.pezzo && e.pezzo.autore_id === user.id)
-    .filter((e) => !e.carteggi || e.carteggi.length === 0);
+    .filter((e) => !e.carteggi || e.carteggi.length === 0)
+    // Decifra il testo dell'eco (privato: cifrato a livello applicativo).
+    .map((e) => ({ ...e, testo: decifraMessaggio(e.testo) ?? e.testo }));
 
   const carteggi = (carteggiRes.data ?? []) as unknown as CarteggioRecord[];
 

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MESSAGGIO_MIN_SLOW, MESSAGGIO_MAX_SLOW } from "@/lib/carteggio";
 import { checkContent } from "@/lib/moderazione";
+import { cifraMessaggio } from "@/lib/crypto-messaggi";
 import { inviaPushAUtente } from "@/lib/push-server";
 import { getUnreadEchiCount } from "@/lib/unread-server";
 import { checkRateLimit, LIMITS } from "@/lib/rate-limit";
@@ -130,11 +131,12 @@ export async function apriCarteggio(
     return { error: cErr?.message ?? "Errore creando il carteggio." };
   }
 
+  // Cifra il testo del primo messaggio (privato tra i due partecipanti).
   const { error: mErr } = await supabase.from("messaggi").insert({
     carteggio_id: carteggio.id,
     mittente_id: user.id,
     tipo: "testo",
-    contenuto_testo: trimmed,
+    contenuto_testo: cifraMessaggio(trimmed),
   });
 
   if (mErr) {

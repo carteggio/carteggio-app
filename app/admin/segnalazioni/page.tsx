@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { FORMATO_LABEL, type FormatoPezzo } from "@/lib/formati";
 import { formatRelativeDate } from "@/lib/date";
+import { decifraMessaggio } from "@/lib/crypto-messaggi";
 import Nav from "@/app/components/nav";
 import {
   respingiSegnalazione,
@@ -171,7 +172,7 @@ export default async function AdminSegnalazioniPage() {
                           eco di {e.mittente?.nome_battesimo ?? "anonimo"}
                         </p>
                         <blockquote className="font-serif italic text-base">
-                          {e.testo}
+                          {decifraMessaggio(e.testo)}
                         </blockquote>
                       </div>
                     );

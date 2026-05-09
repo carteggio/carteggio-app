@@ -7,6 +7,7 @@ import { markMessaggiAsLetti } from "@/lib/unread-server";
 import { SLOW_PHASE_MESSAGGI } from "@/lib/carteggio";
 import { PHOTO_UNLOCK_AFTER_MESSAGES } from "@/lib/foto";
 import { formatRelativeDate } from "@/lib/date";
+import { decifraMessaggio } from "@/lib/crypto-messaggi";
 import Nav from "@/app/components/nav";
 import RefreshUnread from "@/app/components/refresh-unread";
 import ScrollToBottom from "@/app/components/scroll-to-bottom";
@@ -80,8 +81,16 @@ export default async function CarteggioPage({
     markMessaggiAsLetti(user.id, params.id),
   ]);
 
-  const ecoOrigine = ecoOrigineRes.data;
-  const messaggi = (messaggiRes.data ?? []) as Messaggio[];
+  // Decifra il testo dell'eco di partenza e dei messaggi (privati: salvati
+  // cifrati a livello applicativo, vedi lib/crypto-messaggi.ts).
+  const ecoOrigineRaw = ecoOrigineRes.data;
+  const ecoOrigine = ecoOrigineRaw
+    ? { ...ecoOrigineRaw, testo: decifraMessaggio(ecoOrigineRaw.testo) }
+    : null;
+  const messaggi = ((messaggiRes.data ?? []) as Messaggio[]).map((m) => ({
+    ...m,
+    contenuto_testo: decifraMessaggio(m.contenuto_testo),
+  }));
 
   const a = carteggio.a as unknown as {
     nome_battesimo: string;

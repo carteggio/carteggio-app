@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { FORMATO_LABEL, type FormatoPezzo } from "@/lib/formati";
+import { decifraMessaggio } from "@/lib/crypto-messaggi";
 import Nav from "@/app/components/nav";
 import PrimaLetteraForm from "./prima-lettera-form";
 
@@ -142,7 +143,7 @@ export default async function NuovoCarteggioPage({
               {mittente?.fascia_eta && <span>, {mittente.fascia_eta}</span>}
             </p>
             <blockquote className="font-serif italic text-lg leading-relaxed text-ink border-l-2 border-accent pl-4">
-              {eco.testo}
+              {decifraMessaggio(eco.testo)}
             </blockquote>
           </article>
 

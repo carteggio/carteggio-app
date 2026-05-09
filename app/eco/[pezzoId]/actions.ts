@@ -9,6 +9,7 @@ import {
 } from "@/lib/eco";
 import { contaEchiOggi } from "@/lib/eco-server";
 import { checkContent } from "@/lib/moderazione";
+import { cifraMessaggio } from "@/lib/crypto-messaggi";
 import { inviaPushAUtente } from "@/lib/push-server";
 import { getUnreadEchiCount } from "@/lib/unread-server";
 import { checkRateLimit, LIMITS } from "@/lib/rate-limit";
@@ -90,10 +91,12 @@ export async function saveEco(
     return { error: `Hai già lasciato ${ECO_LIMITE_GIORNALIERO} echi oggi. Torna domani.` };
   }
 
+  // Cifra il testo dell'eco prima del salvataggio (privato tra mittente e
+  // destinatario). Vedi lib/crypto-messaggi.ts per il razionale.
   const { error: insertError } = await supabase.from("echi").insert({
     mittente_id: user.id,
     pezzo_id: pezzoId,
-    testo: trimmed,
+    testo: cifraMessaggio(trimmed),
   });
 
   if (insertError) {

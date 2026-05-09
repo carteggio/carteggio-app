@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { canSendMessage } from "@/lib/carteggio-server";
 import { PHOTO_UNLOCK_AFTER_MESSAGES } from "@/lib/foto";
 import { checkContent } from "@/lib/moderazione";
+import { cifraMessaggio } from "@/lib/crypto-messaggi";
 import { inviaPushAUtente } from "@/lib/push-server";
 import { getUnreadEchiCount } from "@/lib/unread-server";
 import { checkRateLimit, LIMITS } from "@/lib/rate-limit";
@@ -102,11 +103,12 @@ export async function sendMessaggio(
     }
   }
 
+  // Cifra il testo del messaggio (privato tra i due partecipanti).
   const { error: insertError } = await supabase.from("messaggi").insert({
     carteggio_id: carteggioId,
     mittente_id: user.id,
     tipo: "testo",
-    contenuto_testo: trimmed,
+    contenuto_testo: cifraMessaggio(trimmed),
   });
 
   if (insertError) {
