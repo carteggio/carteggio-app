@@ -57,6 +57,12 @@ export default async function Home() {
           >
             entra
           </Link>
+          <Link
+            href="/manifesto"
+            className="font-serif italic text-sm text-ink-faded hover:text-accent transition-colors"
+          >
+            perché Carteggio?
+          </Link>
         </div>
       </div>
     </main>
