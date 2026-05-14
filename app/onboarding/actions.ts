@@ -3,9 +3,20 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { FASCE_ETA } from "@/lib/utenti";
+import { findFormato, countWords, type FormatoPezzo } from "@/lib/formati";
 
 const FASCE_VALIDE = FASCE_ETA;
 const CITTA_VALIDE = ["Brescia", "Bergamo"] as const;
+
+// Formati ammessi per il primo pezzo dell'onboarding: i 5 formati pubblici
+// (niente "voce", che è disponibile solo nei carteggi dopo la slow phase).
+const FORMATI_VALIDI: FormatoPezzo[] = [
+  "sei-parole",
+  "ricordo",
+  "confessione",
+  "luogo",
+  "piccola-felicita",
+];
 
 // Step 1: età 18+
 export async function saveEta(formData: FormData) {
@@ -90,22 +101,53 @@ export async function saveNomeFascia(formData: FormData) {
 }
 
 // Step 4: primo pezzo (e creazione del profilo + del primo pezzo)
+// Adesso accetta tutti e 5 i formati pubblici (sei-parole, ricordo,
+// confessione, luogo, piccola-felicita). Validazione lato server come
+// difesa, oltre a quella client-side in onboarding-pezzo-form.
 export async function savePezzo(formData: FormData) {
+  const formato = formData.get("formato");
   const contenuto = formData.get("contenuto");
-  if (typeof contenuto !== "string") {
+
+  if (
+    typeof formato !== "string" ||
+    !FORMATI_VALIDI.includes(formato as (typeof FORMATI_VALIDI)[number])
+  ) {
+    redirect(
+      "/onboarding/pezzo?error=" +
+        encodeURIComponent("Scegli uno dei formati disponibili.")
+    );
+  }
+  if (typeof contenuto !== "string" || contenuto.trim().length === 0) {
     redirect(
       "/onboarding/pezzo?error=" + encodeURIComponent("Scrivi qualcosa.")
     );
   }
 
-  const trimmed = (contenuto as string).trim();
-  const words = trimmed.split(/\s+/).filter((w) => w.length > 0);
+  const fmt = findFormato(formato as string);
+  if (!fmt) {
+    redirect(
+      "/onboarding/pezzo?error=" + encodeURIComponent("Formato non valido.")
+    );
+  }
 
-  if (words.length !== 6) {
+  const trimmed = (contenuto as string).trim();
+
+  // Validazione per formato: exactWords per 'sei-parole', maxChars per gli altri.
+  if (fmt.exactWords) {
+    const words = countWords(trimmed);
+    if (words !== fmt.exactWords) {
+      redirect(
+        "/onboarding/pezzo?error=" +
+          encodeURIComponent(
+            `Una "${fmt.label.toLowerCase()}" è esattamente ${fmt.exactWords} parole. Ne hai scritte ${words}.`
+          )
+      );
+    }
+  } else if (trimmed.length > fmt.maxChars) {
     redirect(
       "/onboarding/pezzo?error=" +
         encodeURIComponent(
-          `Una sei parole è esattamente sei parole. Ne hai scritte ${words.length}.`
+          `Hai superato il limite di ${fmt.maxChars} caratteri (sei a ${trimmed.length}).`
         )
     );
   }
@@ -145,10 +187,10 @@ export async function savePezzo(formData: FormData) {
     );
   }
 
-  // Crea il primo pezzo
+  // Crea il primo pezzo nel formato scelto
   const { error: pezzoError } = await supabase.from("pezzi").insert({
     autore_id: user.id,
-    formato: "sei-parole",
+    formato: formato as FormatoPezzo,
     contenuto_testo: trimmed,
   });
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/auth/profile";
-import { savePezzo } from "../actions";
+import OnboardingPezzoForm from "./onboarding-pezzo-form";
 
 function ProgressDots({ current }: { current: 1 | 2 | 3 | 4 }) {
   return (
@@ -52,46 +52,12 @@ export default async function OnboardingPezzo({
           Il tuo primo pezzo.
         </h1>
         <p className="font-serif italic text-lg text-ink-soft text-center mt-4 leading-relaxed">
-          Una sei parole che ti raccontano oggi.
+          Scegli un formato che ti somiglia,
           <br />
-          Anche stupide. Anche tristi. Vere.
+          poi scrivi qualcosa di vero.
         </p>
 
-        <form action={savePezzo} className="mt-12 space-y-6">
-          <div>
-            <label
-              htmlFor="contenuto"
-              className="block font-sans text-xs tracking-widest uppercase text-ink-faded font-semibold mb-2"
-            >
-              esattamente sei parole
-            </label>
-            <textarea
-              id="contenuto"
-              name="contenuto"
-              required
-              rows={3}
-              maxLength={80}
-              placeholder="Volevo restare. Nessuno me l'ha chiesto."
-              className="w-full bg-paper-deep border border-rule rounded-lg px-4 py-3 text-ink font-serif text-xl text-center focus:outline-none focus:border-accent transition-colors resize-none"
-            />
-            <p className="font-serif italic text-xs text-ink-faded mt-2 text-center">
-              il sistema controlla che siano esattamente sei parole.
-            </p>
-          </div>
-
-          {searchParams.error && (
-            <p className="font-serif italic text-sm text-accent text-center">
-              {searchParams.error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            className="w-full bg-ink text-paper rounded-lg py-3 font-sans text-sm tracking-widest uppercase font-medium hover:bg-accent transition-colors"
-          >
-            pubblica e completa
-          </button>
-        </form>
+        <OnboardingPezzoForm initialError={searchParams.error} />
       </div>
     </main>
   );
